@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ProjectStatus {
+  OPEN
+  FULL
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum AppStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+model User {
+  id            String         @id @default(cuid())
+  clerkId       String         @unique
+  name          String
+  email         String         @unique
+  avatar        String?
+  bio           String?
+  githubUrl     String?
+  linkedinUrl   String?
+  lastLoginAt   DateTime       @default(now())
+  createdAt     DateTime       @default(now())
+  skills        Skill[]
+  domains       Domain[]
+  projectsOwned Project[]      @relation("Owner")
+  teams         TeamMember[]
+  applications  Application[]
+  notifications Notification[]
+  messagesSent  Message[]
+  notesCreated  Note[]
+}
+
+model Project {
+  id               String        @id @default(cuid())
+  title            String
+  description      String
+  problemStatement String
+  requiredSkills   String[]
+  teamSizeMax      Int           @default(5)
+  status           ProjectStatus @default(OPEN)
+  deadline         DateTime?
+  isPrivate        Boolean       @default(false)
+  inviteCode       String?       @unique
+  ownerId          String
+  owner            User          @relation("Owner", fields: [ownerId], references: [id])
+  domain           String
+  applications     Application[]
+  team             TeamMember[]
+  tasks            Task[]
+  notes            Note[]
+  messages         Message[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([domain])
+}
+
+model Application {
+  id        String   @id @default(cuid())
+  userId    String
+  projectId String
+  message   String
+  status    AppStatus @default(PENDING)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([projectId])
+}
+
+model TeamMember {
+  id            String    @id @default(cuid())
+  userId        String
+  projectId     String
+  role          String    @default("member")
+  joinedAt      DateTime  @default(now())
+  removedAt     DateTime?
+  removalReason String?
+  user          User      @relation(fields: [userId], references: [id])
+  project       Project   @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  senderId  String
+  projectId String
+  createdAt DateTime @default(now())
+  sender    User     @relation(fields: [senderId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  projectId String
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id])
+  author    User     @relation(fields: [createdBy], references: [id])
+
+  @@index([projectId])
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  assignedTo  String?
+  dueDate     DateTime?
+  projectId   String
+  createdAt   DateTime   @default(now())
+  project     Project    @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+  @@index([assignedTo])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  message   String
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+model Skill {
+  id    String @id @default(cuid())
+  name  String @unique
+  users User[]
+}
+
+model Domain {
+  id    String @id @default(cuid())
+  name  String @unique
+  users User[]
+}
