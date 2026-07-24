@@ -21,7 +21,7 @@ const hasClerkKeys =
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const content = (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.className} bg-gradient-mesh min-h-screen`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <QueryProvider>
             {children}
