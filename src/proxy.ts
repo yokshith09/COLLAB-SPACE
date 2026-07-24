@@ -12,11 +12,16 @@ const isPublicRoute = createRouteMatcher([
   "/invite",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
+export const proxy = clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
     await auth.protect();
   }
 });
+
+// For Next.js 16+, we export as `proxy` instead of `default`
+// However, in case Clerk or some internal tool expects a default export,
+// we can alias it just to be safe.
+export default proxy;
 
 export const config = {
   matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
