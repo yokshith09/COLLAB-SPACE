@@ -13,7 +13,7 @@ export default async function AdminDashboard() {
   const clerkUser = await currentUser();
   if (!clerkUser) redirect("/sign-in");
 
-  let user = await safeDbQuery(
+  let user: any = await safeDbQuery(
     () => prisma.user.findUnique({ where: { clerkId: userId } }),
     null
   );
