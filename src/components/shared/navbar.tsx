@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, Plus, Compass } from "lucide-react";
+import { Sun, Plus, Compass } from "lucide-react";
 import { useState, useEffect } from "react";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export function Navbar() {
   const { theme, setTheme } = useTheme();
@@ -30,10 +31,13 @@ export function Navbar() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <div className="hidden"></div>
-
-          <Link href="/sign-in"><Button variant="ghost" size="sm">Sign In</Button></Link>
-          <Link href="/sign-up"><Button size="sm">Get Started</Button></Link>
+          <SignedIn>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
+          <SignedOut>
+            <Link href="/sign-in"><Button variant="ghost" size="sm">Sign In</Button></Link>
+            <Link href="/sign-up"><Button size="sm">Get Started</Button></Link>
+          </SignedOut>
         </div>
       </div>
     </header>
