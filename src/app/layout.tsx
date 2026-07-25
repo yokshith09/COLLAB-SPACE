@@ -22,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const content = (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" disableTransitionOnChange>
           <QueryProvider>
             {children}
             <Toaster />

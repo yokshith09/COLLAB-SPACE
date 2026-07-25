@@ -11,8 +11,9 @@ const ClerkSignUp = dynamic(
 
 export function SignUpPageContent() {
   const hasClerk =
-    typeof window !== "undefined" &&
-    !!document.querySelector("clerk-provider");
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.startsWith("pk_") &&
+    !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes("placeholder");
 
   if (!hasClerk) {
     return (
