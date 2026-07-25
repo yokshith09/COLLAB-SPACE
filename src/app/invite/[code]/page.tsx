@@ -50,7 +50,7 @@ export default async function InvitePage({ params }: { params: Promise<{ code: s
             <Link href="/sign-in"><Button variant="outline" className="w-full">Sign in</Button></Link>
           </div>
         ) : (
-          <Link href={`/projects/${project.id}?code=${code}`}>
+          <Link href={`/projects/${project.id}`}>
             <Button className="w-full">View Project</Button>
           </Link>
         )}

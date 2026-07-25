@@ -1,4 +1,3 @@
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { safeDbQuery } from "@/lib/safe-db";
 import { ProjectCard } from "@/components/project/project-card";
@@ -15,6 +14,7 @@ export default async function DiscoverPage({
   searchParams: Promise<{ domain?: string; status?: string; skill?: string; search?: string }>;
 }) {
   const sp = await searchParams;
+
   const where: any = {
     status: { notIn: ["CANCELLED", "COMPLETED"] },
     isPrivate: false,
@@ -26,16 +26,9 @@ export default async function DiscoverPage({
     where.OR = [
       { title: { contains: sp.search, mode: "insensitive" } },
       { description: { contains: sp.search, mode: "insensitive" } },
+      { problemStatement: { contains: sp.search, mode: "insensitive" } },
+      { requiredSkills: { hasSome: [sp.search] } },
     ];
-  }
-
-  const { userId } = await auth();
-  let userProfile = null;
-  if (userId) {
-    userProfile = await safeDbQuery(
-      () => prisma.user.findUnique({ where: { clerkId: userId }, include: { skills: true, domains: true } }),
-      null
-    );
   }
 
   const [projects, domains] = await Promise.all([
@@ -49,43 +42,19 @@ export default async function DiscoverPage({
             messages: { orderBy: { createdAt: "desc" }, take: 1, select: { createdAt: true } },
           },
           orderBy: { createdAt: "desc" },
-          take: 50,
+          take: 24,
         }),
       []
     ),
     safeDbQuery(() => prisma.domain.findMany({ orderBy: { name: "asc" } }), []),
   ]);
 
-  if (userProfile && !sp.search && !sp.domain && !sp.status) {
-    const userDomainNames = userProfile.domains.map((d: any) => d.name);
-    const userSkillNames = userProfile.skills.map((s: any) => s.name);
-    
-    projects.sort((a: any, b: any) => {
-      let scoreA = 0;
-      let scoreB = 0;
-      
-      if (userDomainNames.includes(a.domain)) scoreA += 10;
-      const matchedSkillsA = a.requiredSkills.filter((rs: string) => userSkillNames.includes(rs));
-      scoreA += matchedSkillsA.length;
-      
-      if (userDomainNames.includes(b.domain)) scoreB += 10;
-      const matchedSkillsB = b.requiredSkills.filter((rs: string) => userSkillNames.includes(rs));
-      scoreB += matchedSkillsB.length;
-      
-      if (scoreA !== scoreB) return scoreB - scoreA;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Discover Projects</h1>
-          <p className="text-sm text-muted-foreground">
-            {projects.length} projects found
-            {userProfile && !sp.search && !sp.domain && !sp.status && " • Smart Feed Active ✨"}
-          </p>
+          <p className="text-sm text-muted-foreground">{projects.length} projects found</p>
         </div>
         <Link href="/projects/new">
           <Button size="sm" className="gap-1.5">

@@ -12,7 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getHealthStatus, daysLeft, timeAgo } from "@/lib/utils";
 import { applyToProject } from "@/actions/project";
 import { respondToApplication } from "@/actions/application";
-import { reportProjectInactive } from "@/actions/report";
 import Link from "next/link";
 import { Users, Calendar, Clock, MessageSquare, ExternalLink } from "lucide-react";
 
@@ -31,10 +30,6 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
   const [applyOpen, setApplyOpen] = useState(false);
   const [applyMessage, setApplyMessage] = useState("");
   const [applying, setApplying] = useState(false);
-  const [respondOpen, setRespondOpen] = useState(false);
-  const [respondApp, setRespondApp] = useState<{ id: string, status: "ACCEPTED" | "REJECTED" } | null>(null);
-  const [responseMessage, setResponseMessage] = useState("");
-  const [reporting, setReporting] = useState(false);
 
   const health = getHealthStatus(project.owner.lastLoginAt);
 
@@ -65,34 +60,13 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
     }
   }
 
-  async function handleRespond() {
-    if (!respondApp) return;
-    const result = await respondToApplication(respondApp.id, respondApp.status, responseMessage);
+  async function handleRespond(appId: string, status: "ACCEPTED" | "REJECTED") {
+    const result = await respondToApplication(appId, status);
     if (result.error) {
       toast({ title: "Error", description: result.error, variant: "destructive" });
     } else {
-      toast({ title: respondApp.status === "ACCEPTED" ? "Applicant accepted!" : "Application rejected" });
-      setRespondOpen(false);
-      setRespondApp(null);
-      setResponseMessage("");
+      toast({ title: status === "ACCEPTED" ? "Applicant accepted!" : "Application rejected" });
       router.refresh();
-    }
-  }
-
-  const responseTemplates = {
-    ACCEPTED: ["Welcome to the team! I'll send you a workspace invite shortly.", "Great fit! Excited to work with you.", "Your application looks perfect. Welcome!"],
-    REJECTED: ["Thanks for applying, but we're looking for a different skillset.", "We've filled the position, but best of luck!", "Your profile is impressive, but we decided to go in a different direction."]
-  };
-
-  async function handleReport() {
-    if (!currentUser) { router.push("/sign-in"); return; }
-    setReporting(true);
-    const result = await reportProjectInactive(project.id);
-    setReporting(false);
-    if (result.error) {
-      toast({ title: "Error", description: result.error, variant: "destructive" });
-    } else {
-      toast({ title: "Project reported", description: "The owner has been notified." });
     }
   }
 
@@ -123,42 +97,53 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 shrink-0">
-          {canApply && (
-            <Dialog open={applyOpen} onOpenChange={setApplyOpen}>
-              <DialogTrigger asChild>
-                <Button>Apply to Join</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Apply to {project.title}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <Textarea
-                    placeholder="Tell the admin about your relevant experience and why you're a good fit..."
-                    value={applyMessage}
-                    onChange={(e) => setApplyMessage(e.target.value)}
-                    rows={4}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Applications expire in 7 days if not reviewed. Max 5 applications per day.
-                  </p>
-                  <Button onClick={handleApply} disabled={applying} className="w-full">
-                    {applying ? "Submitting..." : "Submit Application"}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
+          <div className="flex flex-wrap gap-2 shrink-0">
+            {canApply && (
+              <Dialog open={applyOpen} onOpenChange={setApplyOpen}>
+                <DialogTrigger asChild>
+                  <Button>Apply to Join</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Apply to {project.title}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <Textarea
+                      placeholder="Tell the admin about your relevant experience and why you're a good fit..."
+                      value={applyMessage}
+                      onChange={(e) => setApplyMessage(e.target.value)}
+                      rows={4}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Applications expire in 7 days if not reviewed. Max 5 applications per day.
+                    </p>
+                    <Button onClick={handleApply} disabled={applying} className="w-full">
+                      {applying ? "Submitting..." : "Submit Application"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
 
-          {isMember && (
-            <Link href={`/team/${project.id}`}>
-              <Button variant="secondary" className="gap-1.5">
-                <MessageSquare className="h-4 w-4" /> Team Workspace
-              </Button>
-            </Link>
-          )}
-        </div>
+            {isMember && (
+              <Link href={`/team/${project.id}`}>
+                <Button variant="secondary" className="gap-1.5">
+                  <MessageSquare className="h-4 w-4" /> Team Workspace
+                </Button>
+              </Link>
+            )}
+
+            {isOwner && (
+              <Link href={`/projects/${project.id}/settings`}>                <Button variant="outline" className="gap-1.5">
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 15a4 4 0 100-8 4 4 0 000 8z" />
+                    <path d="M12 15v2m-6-4h12m-6-8v2m-6 4h12" />
+                  </svg>
+                  Settings
+                </Button>
+              </Link>
+            )}
+          </div>
       </div>
 
       {userApplication && !isMember && (
@@ -232,45 +217,12 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
                   )}
                   {app.status === "PENDING" && (
                     <div className="flex gap-2 pt-1">
-                      <Button size="sm" onClick={() => { setRespondApp({ id: app.id, status: "ACCEPTED" }); setRespondOpen(true); }}>Accept</Button>
-                      <Button size="sm" variant="outline" onClick={() => { setRespondApp({ id: app.id, status: "REJECTED" }); setRespondOpen(true); }}>Reject</Button>
+                      <Button size="sm" onClick={() => handleRespond(app.id, "ACCEPTED")}>Accept</Button>
+                      <Button size="sm" variant="outline" onClick={() => handleRespond(app.id, "REJECTED")}>Reject</Button>
                     </div>
                   )}
                 </div>
               ))}
-              
-              <Dialog open={respondOpen} onOpenChange={(open) => { setRespondOpen(open); if (!open) { setResponseMessage(""); setRespondApp(null); } }}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{respondApp?.status === "ACCEPTED" ? "Accept Application" : "Reject Application"}</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Quick Templates:</p>
-                      <div className="flex flex-col gap-2">
-                        {respondApp && responseTemplates[respondApp.status].map((tmpl, i) => (
-                          <div 
-                            key={i} 
-                            onClick={() => setResponseMessage(tmpl)}
-                            className="p-2 text-sm border rounded-md cursor-pointer hover:bg-muted text-muted-foreground transition-colors"
-                          >
-                            {tmpl}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <Textarea
-                      placeholder="Or write a custom message to the applicant (optional)..."
-                      value={responseMessage}
-                      onChange={(e) => setResponseMessage(e.target.value)}
-                      rows={3}
-                    />
-                    <Button onClick={handleRespond} className="w-full">
-                      Confirm {respondApp?.status === "ACCEPTED" ? "Acceptance" : "Rejection"}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
             </section>
           )}
         </div>
@@ -292,33 +244,10 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
                 </div>
               </div>
             ))}
-            {Array.from({ length: Math.max(0, project.teamSizeMax - project.team.length) }).map((_, i) => (
-              <div key={i} className="flex items-center gap-2.5 text-muted-foreground">
-                <div className="h-8 w-8 rounded-full border border-dashed border-border grid place-items-center bg-muted/10">
-                  <Users className="h-3 w-3" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium italic">Open seat</p>
-                </div>
-              </div>
-            ))}
           </div>
 
           <div className="p-4 rounded-xl border space-y-2">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-sm">Admin Health</h3>
-              {health.label !== "Active" && !isOwner && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleReport} 
-                  disabled={reporting} 
-                  className="h-6 px-2 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50"
-                >
-                  {reporting ? "Reporting..." : "Report Inactive"}
-                </Button>
-              )}
-            </div>
+            <h3 className="font-semibold text-sm">Admin Health</h3>
             <div className="flex items-center gap-2">
               <span className={`h-2.5 w-2.5 rounded-full ${health.color}`} />
               <span className="text-sm font-medium">{health.label}</span>

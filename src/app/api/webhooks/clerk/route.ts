@@ -31,16 +31,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  if (evt.type === "user.created" || evt.type === "user.updated") {
+  if (evt.type === "user.created") {
     const { id, email_addresses, first_name, last_name, image_url } = evt.data;
     await prisma.user.upsert({
       where: { clerkId: id },
-      update: {
-        email: email_addresses?.[0]?.email_address || "",
-        name: `${first_name || ""} ${last_name || ""}`.trim() || "Anonymous",
-        avatar: image_url || null,
-        lastLoginAt: new Date(),
-      },
+      update: { lastLoginAt: new Date() },
       create: {
         clerkId: id,
         email: email_addresses?.[0]?.email_address || "",

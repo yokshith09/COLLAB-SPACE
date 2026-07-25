@@ -4,15 +4,8 @@ import { safeDbQuery } from "@/lib/safe-db";
 import { notFound, redirect } from "next/navigation";
 import { ProjectDetail } from "@/components/project/project-detail";
 
-export default async function ProjectDetailPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ code?: string }>;
-}) {
+export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: projectId } = await params;
-  const { code } = await searchParams;
   const { userId } = await auth();
   const clerkUser = await currentUser();
   let dbUser = null;
@@ -56,7 +49,7 @@ export default async function ProjectDetailPage({
     null
   );
 
-  if (!project) notFound();
+  if (!project || (project.isPrivate && !userId)) notFound();
 
   const isOwner = dbUser?.id === project.ownerId;
   const isMember = project.team.some((t) => t.userId === dbUser?.id);
@@ -72,11 +65,6 @@ export default async function ProjectDetailPage({
     );
   }
 
-  if (project.isPrivate) {
-    const hasValidInvite = code && project.inviteCode === code;
-    const isAuthorized = isOwner || isMember || userApplication !== null || hasValidInvite;
-    if (!isAuthorized) notFound();
-  }
   let allApplications: any[] = [];
   if (isOwner) {
     allApplications = await safeDbQuery(
