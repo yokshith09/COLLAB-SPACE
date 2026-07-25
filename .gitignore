@@ -44,3 +44,5 @@ next-env.d.ts
 
 # dev server logs
 dev-server*.log
+dev-codex*.log
+.playwright-cli/

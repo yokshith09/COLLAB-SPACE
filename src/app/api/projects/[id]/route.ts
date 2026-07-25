@@ -2,14 +2,18 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+type ProjectRouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+export async function PUT(req: Request, { params }: ProjectRouteContext) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const user = await prisma.user.findUnique({ where: { clerkId: userId } });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  const { id: projectId } = params;
+  const { id: projectId } = await params;
   const project = await prisma.project.findUnique({ where: { id: projectId } });
   if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
 
@@ -45,14 +49,14 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   return NextResponse.json(updated);
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: ProjectRouteContext) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const user = await prisma.user.findUnique({ where: { clerkId: userId } });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  const { id: projectId } = params;
+  const { id: projectId } = await params;
   const project = await prisma.project.findUnique({ where: { id: projectId } });
   if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
 

@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Upload, X, Loader2 } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { FileUpload } from "@/components/shared/file-upload";
 
 interface ProfileEditFormProps {
@@ -32,7 +32,7 @@ export function ProfileEditForm({ user, allSkills, allDomains }: ProfileEditForm
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user.avatar);
-  const [selectedSkills, setSelected, setSelectedSkills] = useState(user.skills.map((s) => s.name));
+  const [selectedSkills, setSelectedSkills] = useState(user.skills.map((s) => s.name));
   const [selectedDomains, setSelectedDomains] = useState(user.domains.map((d) => d.name));
   const [formData, setFormData] = useState({
     name: user.name,
@@ -45,7 +45,7 @@ export function ProfileEditForm({ user, allSkills, allDomains }: ProfileEditForm
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  function handleAvatarUpload(url: string, name: string) {
+  function handleAvatarUpload(url: string) {
     setAvatarPreview(url);
     toast({ title: "Avatar updated" });
   }
