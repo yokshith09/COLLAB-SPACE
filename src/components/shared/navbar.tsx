@@ -33,7 +33,7 @@ export function Navbar() {
 
         <div className="ml-auto flex items-center gap-2">
           {isLoaded && userId ? (
-            <UserButton afterSignOutUrl="/" />
+            <UserButton />
           ) : isLoaded && !userId ? (
             <>
               <Link href="/sign-in"><Button variant="ghost" size="sm">Sign In</Button></Link>
