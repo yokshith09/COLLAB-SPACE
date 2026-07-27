@@ -5,11 +5,12 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Sun, Plus, Compass } from "lucide-react";
 import { useState, useEffect } from "react";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { UserButton, useAuth } from "@clerk/nextjs";
 
 export function Navbar() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { isLoaded, userId } = useAuth();
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -31,13 +32,14 @@ export function Navbar() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <SignedIn>
+          {isLoaded && userId ? (
             <UserButton afterSignOutUrl="/" />
-          </SignedIn>
-          <SignedOut>
-            <Link href="/sign-in"><Button variant="ghost" size="sm">Sign In</Button></Link>
-            <Link href="/sign-up"><Button size="sm">Get Started</Button></Link>
-          </SignedOut>
+          ) : isLoaded && !userId ? (
+            <>
+              <Link href="/sign-in"><Button variant="ghost" size="sm">Sign In</Button></Link>
+              <Link href="/sign-up"><Button size="sm">Get Started</Button></Link>
+            </>
+          ) : null}
         </div>
       </div>
     </header>
