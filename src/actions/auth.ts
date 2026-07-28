@@ -28,10 +28,14 @@ export async function registerUser(formData: FormData) {
 
     if (existingUser) {
       if (!existingUser.password) {
-        return {
-          error:
-            "This email exists from the old sign-in system and does not have a password yet. Use a new email or migrate this account in the database.",
-        };
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await prisma.user.update({
+          where: { email },
+          data: { name, password: hashedPassword },
+        });
+
+        return { success: true };
       }
 
       return { error: "An account already exists for this email." };
