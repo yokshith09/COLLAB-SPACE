@@ -1,26 +1,30 @@
 import type { NextAuthConfig } from "next-auth";
+import type { CredentialsProvider } from "next-auth/providers/credentials";
 
-export const authConfig = {
+export const authConfig: NextAuthConfig = {
   providers: [
-    {
+    CredentialsProvider({
+      id: "email", // Added required id property
       name: "Email and Password",
       credentials: {
         email: { label: "Email", type: "email", placeholder: "m@example.com" },
         password: { label: "Password", type: "password" },
       },
-      authorize: async (credentials) => {
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
-        // Note: This would require prisma import - keeping it here as placeholder
-        // const { prisma } = require("@/lib/prisma");
-        // const { bcrypt } = require("bcryptjs");
+        // Database call - placeholder implementation
+        // Should query the database for user by email
+        // TODO: Implement actual database lookup
+        // const needle = await prisma.user.findUnique({
+        //   where: { email: credentials.email as string },
+        // });
 
-        // For now, return null - requires actual database implementation
-        return null;
+        return null; // Return null for now (requires actual database integration)
       },
-    },
+    }),
   ],
   session: { strategy: "jwt" },
   callbacks: {
