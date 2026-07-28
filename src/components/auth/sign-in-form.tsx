@@ -7,7 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { AlertCircle, ArrowRight, Loader2, Lock, Mail } from "lucide-react";
+
+function getSafeCallbackUrl() {
+  if (typeof window === "undefined") return "/dashboard";
+  const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
+  if (!callbackUrl || !callbackUrl.startsWith("/") || callbackUrl.startsWith("//")) {
+    return "/dashboard";
+  }
+  return callbackUrl;
+}
 
 export function SignInForm() {
   const router = useRouter();
@@ -20,8 +29,14 @@ export function SignInForm() {
     setError("");
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
+    const email = ((formData.get("email") as string) || "").trim().toLowerCase();
     const password = formData.get("password") as string;
+
+    if (!email || !password) {
+      setError("Enter your email and password to continue.");
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const res = await signIn("credentials", {
@@ -30,55 +45,67 @@ export function SignInForm() {
         redirect: false,
       });
 
-      if (res?.error) {
-        setError("Invalid email or password");
+      if (res?.error || res?.ok === false) {
+        setError("The email or password does not match an account.");
       } else {
-        router.push("/dashboard");
+        router.push(getSafeCallbackUrl());
         router.refresh();
       }
-    } catch (err) {
-      setError("An unexpected error occurred");
+    } catch {
+      setError("Sign in failed. Check your connection and try again.");
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-5">
       {error && (
-        <div className="p-3 text-sm bg-red-100 text-red-600 rounded-md">
-          {error}
+        <div className="flex items-start gap-3 rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-3 text-sm text-destructive">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          placeholder="m@example.com"
-          required
-          disabled={isLoading}
-        />
+        <Label htmlFor="email">Email address</Label>
+        <div className="relative">
+          <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="you@example.com"
+            autoComplete="email"
+            required
+            disabled={isLoading}
+            className="h-11 pl-10"
+          />
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          required
-          disabled={isLoading}
-        />
+        <div className="relative">
+          <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            disabled={isLoading}
+            className="h-11 pl-10"
+          />
+        </div>
       </div>
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Sign In
+      <Button type="submit" className="h-11 w-full" disabled={isLoading}>
+        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+        Sign in
+        {!isLoading ? <ArrowRight className="h-4 w-4" /> : null}
       </Button>
-      <div className="text-center text-sm">
-        Don&apos;t have an account?{" "}
-        <Link href="/sign-up" className="text-primary hover:underline">
-          Sign up
+      <div className="text-center text-sm text-muted-foreground">
+        New to CollabSpace?{" "}
+        <Link href="/sign-up" className="font-medium text-primary underline-offset-4 hover:underline">
+          Create an account
         </Link>
       </div>
     </form>

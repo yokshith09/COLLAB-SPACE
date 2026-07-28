@@ -2,6 +2,15 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+Create a local environment file with the required values:
+
+```bash
+cp .env.example .env.local
+npx auth secret
+```
+
+The app uses Auth.js credentials auth with users stored in the Prisma `User` table. Clerk keys are no longer required.
+
 First, run the development server:
 
 ```bash

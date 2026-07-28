@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { AlertCircle, ArrowRight, Loader2, Lock, Mail, UserRound } from "lucide-react";
 import { registerUser } from "@/actions/auth";
 
 export function SignUpForm() {
@@ -21,7 +21,7 @@ export function SignUpForm() {
     setError("");
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
+    const email = ((formData.get("email") as string) || "").trim().toLowerCase();
     const password = formData.get("password") as string;
 
     try {
@@ -40,65 +40,83 @@ export function SignUpForm() {
         redirect: false,
       });
 
-      if (signInRes?.error) {
+      if (signInRes?.error || signInRes?.ok === false) {
         setError("Account created, but auto-login failed. Please sign in.");
       } else {
         router.push("/dashboard");
         router.refresh();
       }
-    } catch (err) {
-      setError("An unexpected error occurred");
+    } catch {
+      setError("We could not create your account. Please try again.");
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-5">
       {error && (
-        <div className="p-3 text-sm bg-red-100 text-red-600 rounded-md">
-          {error}
+        <div className="flex items-start gap-3 rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-3 text-sm text-destructive">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
       <div className="space-y-2">
-        <Label htmlFor="name">Full Name</Label>
-        <Input
-          id="name"
-          name="name"
-          placeholder="John Doe"
-          required
-          disabled={isLoading}
-        />
+        <Label htmlFor="name">Full name</Label>
+        <div className="relative">
+          <UserRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="name"
+            name="name"
+            placeholder="Aarav Mehta"
+            autoComplete="name"
+            required
+            disabled={isLoading}
+            className="h-11 pl-10"
+          />
+        </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          placeholder="m@example.com"
-          required
-          disabled={isLoading}
-        />
+        <Label htmlFor="email">Email address</Label>
+        <div className="relative">
+          <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="you@example.com"
+            autoComplete="email"
+            required
+            disabled={isLoading}
+            className="h-11 pl-10"
+          />
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          required
-          minLength={6}
-          disabled={isLoading}
-        />
+        <div className="relative">
+          <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            disabled={isLoading}
+            className="h-11 pl-10"
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">Use at least 8 characters.</p>
       </div>
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Sign Up
+      <Button type="submit" className="h-11 w-full" disabled={isLoading}>
+        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+        Create account
+        {!isLoading ? <ArrowRight className="h-4 w-4" /> : null}
       </Button>
-      <div className="text-center text-sm">
+      <div className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/sign-in" className="text-primary hover:underline">
+        <Link href="/sign-in" className="font-medium text-primary underline-offset-4 hover:underline">
           Sign in
         </Link>
       </div>
