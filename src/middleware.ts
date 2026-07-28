@@ -1,22 +1,35 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
 
-const isPublicRoute = createRouteMatcher([
+const { auth } = NextAuth(authConfig);
+
+const publicRoutes = [
   "/",
   "/projects",
-  "/projects/(.*)",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/api/cron/(.*)",
-  "/api/webhooks/(.*)",
-  "/invite/(.*)",
-]);
+  "/sign-in",
+  "/sign-up",
+];
 
-export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    await auth.protect();
+const publicPrefixes = [
+  "/projects/",
+  "/api/",
+  "/invite/",
+];
+
+export default auth((req) => {
+  const { nextUrl } = req;
+  const isLoggedIn = !!req.auth;
+
+  const isPublicRoute = 
+    publicRoutes.includes(nextUrl.pathname) || 
+    publicPrefixes.some(prefix => nextUrl.pathname.startsWith(prefix));
+
+  if (!isLoggedIn && !isPublicRoute) {
+    return Response.redirect(new URL("/sign-in", nextUrl));
   }
 });
 
 export const config = {
-  matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
+  // https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher
+  matcher: ['/((?!api|_next/static|_next/image|.*\\.png$).*)'],
 };

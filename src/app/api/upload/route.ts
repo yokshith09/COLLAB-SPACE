@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { supabase } from "@/lib/supabase-client";
@@ -35,10 +35,11 @@ export async function POST(req: NextRequest) {
   const { data: publicUrl } = supabase.storage.from("files").getPublicUrl(filePath);
 
   if (type === "avatar") {
-    const { userId } = await auth();
+    const session = await auth();
+  const userId = session?.user?.id;
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const user = await prisma.user.findUnique({ where: { clerkId: userId } });
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     await prisma.user.update({

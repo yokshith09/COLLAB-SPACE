@@ -1,13 +1,13 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ userId: string }> }) {
   const { userId } = await params;
   const session = await auth();
-  if (!session.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const user = await prisma.user.findUnique({ where: { clerkId: session.userId } });
+  const user = await prisma.user.findUnique({ where: { id: session?.user?.id } });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
   const { projectId, removalReason } = await req.json();

@@ -1,11 +1,12 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 export async function respondToApplication(applicationId: string, status: "ACCEPTED" | "REJECTED") {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) return { error: "Unauthorized" };
 
   const app = await prisma.application.findUnique({
@@ -15,7 +16,7 @@ export async function respondToApplication(applicationId: string, status: "ACCEP
 
   if (!app) return { error: "Application not found" };
 
-  const owner = await prisma.user.findUnique({ where: { clerkId: userId } });
+  const owner = await prisma.user.findUnique({ where: { id: userId } });
   if (!owner || app.project.ownerId !== owner.id) return { error: "Not authorized" };
 
   if (app.status !== "PENDING") return { error: "Application already processed" };

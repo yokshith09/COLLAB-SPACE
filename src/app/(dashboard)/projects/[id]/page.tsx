@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { safeDbQuery } from "@/lib/safe-db";
 import { notFound, redirect } from "next/navigation";
@@ -6,14 +6,15 @@ import { ProjectDetail } from "@/components/project/project-detail";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: projectId } = await params;
-  const { userId } = await auth();
-  const clerkUser = await currentUser();
+  const session = await auth();
+  const userId = session?.user?.id;
+  
   let dbUser = null;
 
-  if (userId && clerkUser) {
+  if (userId ) {
     dbUser = await safeDbQuery(
       () =>
-        prisma.user.findUnique({ where: { clerkId: userId } }),
+        prisma.user.findUnique({ where: { id: userId } }),
       null
     );
     if (!dbUser) {
@@ -21,10 +22,10 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         () =>
           prisma.user.create({
             data: {
-              clerkId: userId,
-              email: clerkUser.emailAddresses[0]?.emailAddress || "",
-              name: `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "Anonymous",
-              avatar: clerkUser.imageUrl || null,
+              id: userId,
+              email: session?.user?.email || "",
+              name: `${session?.user?.name} ${""}`.trim() || "Anonymous",
+              avatar: session?.user?.image || null,
             },
           }),
         null

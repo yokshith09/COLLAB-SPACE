@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -14,10 +14,11 @@ export async function createProject(data: {
   deadline: Date | null;
   isPrivate: boolean;
 }) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) return { error: "Unauthorized" };
 
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return { error: "User not found" };
 
   const activeCount = await prisma.project.count({
@@ -50,10 +51,11 @@ export async function createProject(data: {
 }
 
 export async function applyToProject(projectId: string, message: string) {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) return { error: "Unauthorized" };
 
-  const user = await prisma.user.findUnique({ where: { clerkId: userId } });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return { error: "User not found" };
 
   const project = await prisma.project.findUnique({ where: { id: projectId } });

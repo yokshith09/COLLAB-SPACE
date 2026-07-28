@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { safeDbQuery } from "@/lib/safe-db";
@@ -6,16 +6,17 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default async function DashboardPage() {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) redirect("/sign-in");
 
-  const clerkUser = await currentUser();
-  if (!clerkUser) redirect("/sign-in");
+  
+  
 
   let user = await safeDbQuery(
     () =>
       prisma.user.findUnique({
-        where: { clerkId: userId },
+        where: { id: userId },
         include: {
           projectsOwned: { include: { team: true }, orderBy: { createdAt: "desc" } },
           applications: {
@@ -35,10 +36,10 @@ export default async function DashboardPage() {
       () =>
         prisma.user.create({
           data: {
-            clerkId: userId,
-            email: clerkUser.emailAddresses[0]?.emailAddress || "",
-            name: `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "Anonymous",
-            avatar: clerkUser.imageUrl || null,
+            id: userId,
+            email: session?.user?.email || "",
+            name: `${session?.user?.name} ${""}`.trim() || "Anonymous",
+            avatar: session?.user?.image || null,
           },
           include: {
             projectsOwned: { include: { team: true }, orderBy: { createdAt: "desc" } },

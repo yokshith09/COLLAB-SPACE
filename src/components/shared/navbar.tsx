@@ -1,20 +1,12 @@
-"use client";
-
 import Link from "next/link";
-import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
-import { Sun, Plus, Compass } from "lucide-react";
-import { useState, useEffect } from "react";
-import { UserButton, useAuth } from "@clerk/nextjs";
+import { Compass } from "lucide-react";
+import { auth } from "@/auth";
+import { SignOutButton } from "./sign-out-button";
 
-export function Navbar() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const { isLoaded, userId } = useAuth();
-
-  useEffect(() => { setMounted(true); }, []);
-
-  if (!mounted) return null;
+export async function Navbar() {
+  const session = await auth();
+  const userId = session?.user?.id;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -29,17 +21,24 @@ export function Navbar() {
               <Compass className="h-4 w-4" /> Discover
             </Button>
           </Link>
+          {userId && (
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm" className="gap-1.5">
+                Dashboard
+              </Button>
+            </Link>
+          )}
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          {isLoaded && userId ? (
-            <UserButton />
-          ) : isLoaded && !userId ? (
+          {userId ? (
+            <SignOutButton />
+          ) : (
             <>
               <Link href="/sign-in"><Button variant="ghost" size="sm">Sign In</Button></Link>
               <Link href="/sign-up"><Button size="sm">Get Started</Button></Link>
             </>
-          ) : null}
+          )}
         </div>
       </div>
     </header>

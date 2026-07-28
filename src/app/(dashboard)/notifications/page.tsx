@@ -1,18 +1,19 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { safeDbQuery } from "@/lib/safe-db";
 import { NotificationsList } from "@/components/notifications/notifications-list";
 
 export default async function NotificationsPage() {
-  const { userId } = await auth();
+  const session = await auth();
+  const userId = session?.user?.id;
   if (!userId) redirect("/sign-in");
 
-  const clerkUser = await currentUser();
-  if (!clerkUser) redirect("/sign-in");
+  
+  
 
   let user = await safeDbQuery(
-    () => prisma.user.findUnique({ where: { clerkId: userId } }),
+    () => prisma.user.findUnique({ where: { id: userId } }),
     null
   );
 
@@ -21,10 +22,10 @@ export default async function NotificationsPage() {
       () =>
         prisma.user.create({
           data: {
-            clerkId: userId,
-            email: clerkUser.emailAddresses[0]?.emailAddress || "",
-            name: `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() || "Anonymous",
-            avatar: clerkUser.imageUrl || null,
+            id: userId,
+            email: session?.user?.email || "",
+            name: `${session?.user?.name} ${""}`.trim() || "Anonymous",
+            avatar: session?.user?.image || null,
           },
         }),
       null

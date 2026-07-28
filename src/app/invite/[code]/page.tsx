@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { safeDbQuery } from "@/lib/safe-db";
 import Link from "next/link";
@@ -10,7 +10,7 @@ export default async function InvitePage({ params }: { params: Promise<{ code: s
   let userId: string | null = null;
   try {
     const session = await auth();
-    userId = session.userId;
+    userId = session?.user?.id || null;
   } catch {
     userId = null;
   }

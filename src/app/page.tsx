@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Users, MessageSquare, CheckSquare, Search, ArrowRight,
   Globe, Zap, Shield, Sparkles, ChevronRight, Star
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const features = [
   {
@@ -66,89 +69,80 @@ const stats = [
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
-        <div className="flex h-16 items-center px-4 max-w-7xl mx-auto">
-          <Link href="/" className="font-bold text-xl tracking-tight text-primary">
-            CollabSpace
-          </Link>
-          <nav className="hidden md:flex items-center gap-6 ml-8 text-sm">
-            <Link href="/projects" className="text-muted-foreground hover:text-foreground transition-colors">
-              Discover
-            </Link>
-            <Link href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
-              Features
-            </Link>
-            <Link href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">
-              How It Works
-            </Link>
-          </nav>
-          <div className="ml-auto flex items-center gap-3">
-            <Link href="/sign-in">
-              <Button variant="ghost" size="sm">Sign In</Button>
-            </Link>
-            <Link href="/sign-up">
-              <Button size="sm" className="gap-1.5">
-                Get Started <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden py-20 md:py-32 px-4">
-          {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
+        <section className="relative overflow-hidden py-20 md:py-32 px-4 flex items-center justify-center min-h-[90vh]">
+          {/* Background gradient and glow */}
+          <div className="absolute inset-0 bg-background" />
+          <div className="glow-bg top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary rounded-[100%]" />
+          <div className="glow-bg bottom-0 right-0 w-[600px] h-[600px] bg-accent rounded-[100%]" />
 
-          <div className="relative max-w-4xl mx-auto text-center space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-card/50 backdrop-blur text-sm text-muted-foreground">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              Open-source collaboration platform
-            </div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="relative max-w-5xl mx-auto text-center space-y-10 z-10"
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-primary/20 glass text-sm font-medium text-foreground shadow-sm"
+            >
+              <span className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_var(--color-primary)]" />
+              Next-generation collaboration platform
+            </motion.div>
 
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight">
-              Find your next{" "}
-              <span className="text-primary">co-founder</span>
+            <h1 className="text-6xl md:text-8xl font-extrabold tracking-tight leading-[1.1]">
+              Find your next <br className="hidden md:block" />
+              <span className="text-gradient">co-founder</span>
               <br />
               or teammate
             </h1>
 
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Post project ideas, recruit matching teammates, and collaborate with full transparency.
-              Built for students, hackers, and startup builders.
+              Built for the fastest shipping students, hackers, and builders.
             </p>
 
-            <div className="flex flex-wrap gap-4 justify-center pt-2">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center pt-6"
+            >
               <Link href="/sign-up">
-                <Button size="lg" className="text-base px-8 gap-2">
+                <Button size="lg" className="h-14 px-10 text-lg rounded-full gap-2 shadow-lg hover:shadow-primary/25 hover:-translate-y-1 transition-all">
                   Start Building <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/projects">
-                <Button size="lg" variant="outline" className="text-base px-8 gap-2">
+                <Button size="lg" variant="outline" className="h-14 px-10 text-lg rounded-full gap-2 glass hover:bg-muted/50 transition-all">
                   Browse Projects <ChevronRight className="h-5 w-5" />
                 </Button>
               </Link>
-            </div>
+            </motion.div>
 
-            <div className="flex items-center justify-center gap-8 pt-8 text-sm text-muted-foreground">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="flex flex-wrap items-center justify-center gap-8 pt-10 text-sm font-medium text-muted-foreground"
+            >
               <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
+                <Shield className="h-5 w-5 text-primary" />
                 <span>Public by default</span>
               </div>
               <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4" />
+                <Zap className="h-5 w-5 text-primary" />
                 <span>Real-time collaboration</span>
               </div>
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
-                <span>Skill-based matching</span>
+                <Sparkles className="h-5 w-5 text-primary" />
+                <span>AI-assisted matching</span>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </section>
 
         {/* Stats Section */}
