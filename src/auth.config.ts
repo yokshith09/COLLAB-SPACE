@@ -1,11 +1,11 @@
 import type { NextAuthConfig } from "next-auth";
-import type { CredentialsProvider } from "next-auth/providers/credentials";
 
 export const authConfig: NextAuthConfig = {
   providers: [
-    CredentialsProvider({
-      id: "email", // Added required id property
+    {
+      id: "credentials",
       name: "Email and Password",
+      type: "credentials",
       credentials: {
         email: { label: "Email", type: "email", placeholder: "m@example.com" },
         password: { label: "Password", type: "password" },
@@ -24,7 +24,7 @@ export const authConfig: NextAuthConfig = {
 
         return null; // Return null for now (requires actual database integration)
       },
-    }),
+    },
   ],
   session: { strategy: "jwt" },
   callbacks: {
