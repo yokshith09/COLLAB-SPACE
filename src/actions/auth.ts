@@ -23,9 +23,17 @@ export async function registerUser(formData: FormData) {
   try {
     const existingUser = await prisma.user.findUnique({
       where: { email },
+      select: { password: true },
     });
 
     if (existingUser) {
+      if (!existingUser.password) {
+        return {
+          error:
+            "This email exists from the old sign-in system and does not have a password yet. Use a new email or migrate this account in the database.",
+        };
+      }
+
       return { error: "An account already exists for this email." };
     }
 

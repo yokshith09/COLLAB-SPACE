@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function SignInPage() {
   return (
-    <section className="min-h-[calc(100dvh-3.5rem)] bg-[radial-gradient(circle_at_top_left,hsl(239_84%_67%_/_0.16),transparent_34%),linear-gradient(180deg,var(--color-background),var(--color-muted))] px-4 py-10 sm:px-6 lg:px-8">
+    <section className="min-h-[calc(100dvh-3.5rem)] bg-[radial-gradient(circle_at_top_left,hsl(174_67%_29%_/_0.18),transparent_36%),radial-gradient(circle_at_bottom_right,hsl(39_72%_65%_/_0.20),transparent_34%),linear-gradient(180deg,var(--color-background),var(--color-muted))] px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto grid min-h-[calc(100dvh-8.5rem)] w-full max-w-6xl items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="max-w-xl">
           <Link href="/" className="text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
@@ -33,7 +33,7 @@ export default function SignInPage() {
           </div>
         </div>
 
-        <div className="w-full rounded-xl border border-border/70 bg-card/90 p-6 shadow-2xl shadow-primary/10 backdrop-blur sm:p-8">
+        <div className="w-full rounded-xl border border-border bg-card p-6 shadow-2xl shadow-primary/12 sm:p-8">
           <div className="mb-8">
             <p className="text-sm text-muted-foreground">Welcome back</p>
             <h2 className="mt-2 text-3xl font-semibold tracking-tight">Sign in to CollabSpace</h2>

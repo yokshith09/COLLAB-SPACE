@@ -9,9 +9,9 @@ export async function Navbar() {
   const userId = session?.user?.id;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/80 bg-card/92 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/75">
       <div className="flex h-14 items-center px-4 gap-4 max-w-7xl mx-auto">
-        <Link href="/" className="font-bold text-lg tracking-tight mr-4">
+        <Link href="/" className="font-bold text-lg tracking-tight text-foreground mr-4">
           CollabSpace
         </Link>
 
