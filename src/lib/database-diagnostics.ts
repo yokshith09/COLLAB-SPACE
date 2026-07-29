@@ -97,7 +97,9 @@ export function getDatabaseDiagnostic(error: unknown): DatabaseDiagnostic {
     text.includes("etimedout") ||
     text.includes("enotfound") ||
     text.includes("connection terminated") ||
-    text.includes("connection timeout")
+    text.includes("connection timeout") ||
+    text.includes("ssl") ||
+    text.includes("certificate")
   ) {
     return {
       code: codes.includes("P1001") ? "P1001" : "DB_UNREACHABLE",
