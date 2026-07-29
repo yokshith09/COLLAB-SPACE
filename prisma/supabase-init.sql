@@ -1,17 +1,24 @@
--- CreateSchema
+-- Supabase bootstrap for CollabSpace.
+-- This file is safe to run more than once in the Supabase SQL Editor.
+
 CREATE SCHEMA IF NOT EXISTS "public";
 
--- CreateEnum
-CREATE TYPE "ProjectStatus" AS ENUM ('OPEN', 'FULL', 'ACTIVE', 'COMPLETED', 'CANCELLED');
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'ProjectStatus') THEN
+    CREATE TYPE "ProjectStatus" AS ENUM ('OPEN', 'FULL', 'ACTIVE', 'COMPLETED', 'CANCELLED');
+  END IF;
 
--- CreateEnum
-CREATE TYPE "AppStatus" AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED');
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'AppStatus') THEN
+    CREATE TYPE "AppStatus" AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED');
+  END IF;
 
--- CreateEnum
-CREATE TYPE "TaskStatus" AS ENUM ('TODO', 'IN_PROGRESS', 'DONE');
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'TaskStatus') THEN
+    CREATE TYPE "TaskStatus" AS ENUM ('TODO', 'IN_PROGRESS', 'DONE');
+  END IF;
+END $$;
 
--- CreateTable
-CREATE TABLE "User" (
+CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -26,8 +33,7 @@ CREATE TABLE "User" (
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Project" (
+CREATE TABLE IF NOT EXISTS "Project" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -46,8 +52,7 @@ CREATE TABLE "Project" (
     CONSTRAINT "Project_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Application" (
+CREATE TABLE IF NOT EXISTS "Application" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
@@ -59,8 +64,7 @@ CREATE TABLE "Application" (
     CONSTRAINT "Application_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "TeamMember" (
+CREATE TABLE IF NOT EXISTS "TeamMember" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
@@ -72,8 +76,7 @@ CREATE TABLE "TeamMember" (
     CONSTRAINT "TeamMember_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Message" (
+CREATE TABLE IF NOT EXISTS "Message" (
     "id" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "senderId" TEXT NOT NULL,
@@ -83,8 +86,7 @@ CREATE TABLE "Message" (
     CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Note" (
+CREATE TABLE IF NOT EXISTS "Note" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "content" TEXT NOT NULL,
@@ -96,8 +98,7 @@ CREATE TABLE "Note" (
     CONSTRAINT "Note_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Task" (
+CREATE TABLE IF NOT EXISTS "Task" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
@@ -110,8 +111,7 @@ CREATE TABLE "Task" (
     CONSTRAINT "Task_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Notification" (
+CREATE TABLE IF NOT EXISTS "Notification" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "type" TEXT NOT NULL,
@@ -123,145 +123,116 @@ CREATE TABLE "Notification" (
     CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Skill" (
+CREATE TABLE IF NOT EXISTS "Skill" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
 
     CONSTRAINT "Skill_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Domain" (
+CREATE TABLE IF NOT EXISTS "Domain" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
 
     CONSTRAINT "Domain_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "_SkillToUser" (
+CREATE TABLE IF NOT EXISTS "_SkillToUser" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL,
 
     CONSTRAINT "_SkillToUser_AB_pkey" PRIMARY KEY ("A","B")
 );
 
--- CreateTable
-CREATE TABLE "_DomainToUser" (
+CREATE TABLE IF NOT EXISTS "_DomainToUser" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL,
 
     CONSTRAINT "_DomainToUser_AB_pkey" PRIMARY KEY ("A","B")
 );
 
--- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
+CREATE UNIQUE INDEX IF NOT EXISTS "Project_inviteCode_key" ON "Project"("inviteCode");
+CREATE INDEX IF NOT EXISTS "Project_ownerId_idx" ON "Project"("ownerId");
+CREATE INDEX IF NOT EXISTS "Project_status_idx" ON "Project"("status");
+CREATE INDEX IF NOT EXISTS "Project_domain_idx" ON "Project"("domain");
+CREATE INDEX IF NOT EXISTS "Application_status_idx" ON "Application"("status");
+CREATE INDEX IF NOT EXISTS "Application_expiresAt_idx" ON "Application"("expiresAt");
+CREATE INDEX IF NOT EXISTS "Application_projectId_idx" ON "Application"("projectId");
+CREATE UNIQUE INDEX IF NOT EXISTS "Application_userId_projectId_key" ON "Application"("userId", "projectId");
+CREATE INDEX IF NOT EXISTS "TeamMember_userId_idx" ON "TeamMember"("userId");
+CREATE INDEX IF NOT EXISTS "TeamMember_projectId_idx" ON "TeamMember"("projectId");
+CREATE UNIQUE INDEX IF NOT EXISTS "TeamMember_userId_projectId_key" ON "TeamMember"("userId", "projectId");
+CREATE INDEX IF NOT EXISTS "Message_projectId_idx" ON "Message"("projectId");
+CREATE INDEX IF NOT EXISTS "Note_projectId_idx" ON "Note"("projectId");
+CREATE INDEX IF NOT EXISTS "Task_projectId_idx" ON "Task"("projectId");
+CREATE INDEX IF NOT EXISTS "Task_assignedTo_idx" ON "Task"("assignedTo");
+CREATE INDEX IF NOT EXISTS "Notification_userId_idx" ON "Notification"("userId");
+CREATE INDEX IF NOT EXISTS "Notification_isRead_idx" ON "Notification"("isRead");
+CREATE UNIQUE INDEX IF NOT EXISTS "Skill_name_key" ON "Skill"("name");
+CREATE UNIQUE INDEX IF NOT EXISTS "Domain_name_key" ON "Domain"("name");
+CREATE INDEX IF NOT EXISTS "_SkillToUser_B_index" ON "_SkillToUser"("B");
+CREATE INDEX IF NOT EXISTS "_DomainToUser_B_index" ON "_DomainToUser"("B");
 
--- CreateIndex
-CREATE UNIQUE INDEX "Project_inviteCode_key" ON "Project"("inviteCode");
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Project_ownerId_fkey') THEN
+    ALTER TABLE "Project" ADD CONSTRAINT "Project_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
 
--- CreateIndex
-CREATE INDEX "Project_ownerId_idx" ON "Project"("ownerId");
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Application_userId_fkey') THEN
+    ALTER TABLE "Application" ADD CONSTRAINT "Application_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
 
--- CreateIndex
-CREATE INDEX "Project_status_idx" ON "Project"("status");
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Application_projectId_fkey') THEN
+    ALTER TABLE "Application" ADD CONSTRAINT "Application_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
 
--- CreateIndex
-CREATE INDEX "Project_domain_idx" ON "Project"("domain");
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'TeamMember_userId_fkey') THEN
+    ALTER TABLE "TeamMember" ADD CONSTRAINT "TeamMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
 
--- CreateIndex
-CREATE INDEX "Application_status_idx" ON "Application"("status");
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'TeamMember_projectId_fkey') THEN
+    ALTER TABLE "TeamMember" ADD CONSTRAINT "TeamMember_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
 
--- CreateIndex
-CREATE INDEX "Application_expiresAt_idx" ON "Application"("expiresAt");
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Message_senderId_fkey') THEN
+    ALTER TABLE "Message" ADD CONSTRAINT "Message_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
 
--- CreateIndex
-CREATE INDEX "Application_projectId_idx" ON "Application"("projectId");
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Message_projectId_fkey') THEN
+    ALTER TABLE "Message" ADD CONSTRAINT "Message_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
 
--- CreateIndex
-CREATE UNIQUE INDEX "Application_userId_projectId_key" ON "Application"("userId", "projectId");
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Note_projectId_fkey') THEN
+    ALTER TABLE "Note" ADD CONSTRAINT "Note_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
 
--- CreateIndex
-CREATE INDEX "TeamMember_userId_idx" ON "TeamMember"("userId");
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Note_createdBy_fkey') THEN
+    ALTER TABLE "Note" ADD CONSTRAINT "Note_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
 
--- CreateIndex
-CREATE INDEX "TeamMember_projectId_idx" ON "TeamMember"("projectId");
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Task_projectId_fkey') THEN
+    ALTER TABLE "Task" ADD CONSTRAINT "Task_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
 
--- CreateIndex
-CREATE UNIQUE INDEX "TeamMember_userId_projectId_key" ON "TeamMember"("userId", "projectId");
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Notification_userId_fkey') THEN
+    ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+  END IF;
 
--- CreateIndex
-CREATE INDEX "Message_projectId_idx" ON "Message"("projectId");
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = '_SkillToUser_A_fkey') THEN
+    ALTER TABLE "_SkillToUser" ADD CONSTRAINT "_SkillToUser_A_fkey" FOREIGN KEY ("A") REFERENCES "Skill"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
 
--- CreateIndex
-CREATE INDEX "Note_projectId_idx" ON "Note"("projectId");
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = '_SkillToUser_B_fkey') THEN
+    ALTER TABLE "_SkillToUser" ADD CONSTRAINT "_SkillToUser_B_fkey" FOREIGN KEY ("B") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
 
--- CreateIndex
-CREATE INDEX "Task_projectId_idx" ON "Task"("projectId");
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = '_DomainToUser_A_fkey') THEN
+    ALTER TABLE "_DomainToUser" ADD CONSTRAINT "_DomainToUser_A_fkey" FOREIGN KEY ("A") REFERENCES "Domain"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
 
--- CreateIndex
-CREATE INDEX "Task_assignedTo_idx" ON "Task"("assignedTo");
-
--- CreateIndex
-CREATE INDEX "Notification_userId_idx" ON "Notification"("userId");
-
--- CreateIndex
-CREATE INDEX "Notification_isRead_idx" ON "Notification"("isRead");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Skill_name_key" ON "Skill"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Domain_name_key" ON "Domain"("name");
-
--- CreateIndex
-CREATE INDEX "_SkillToUser_B_index" ON "_SkillToUser"("B");
-
--- CreateIndex
-CREATE INDEX "_DomainToUser_B_index" ON "_DomainToUser"("B");
-
--- AddForeignKey
-ALTER TABLE "Project" ADD CONSTRAINT "Project_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Application" ADD CONSTRAINT "Application_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Application" ADD CONSTRAINT "Application_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "TeamMember" ADD CONSTRAINT "TeamMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "TeamMember" ADD CONSTRAINT "TeamMember_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Message" ADD CONSTRAINT "Message_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Message" ADD CONSTRAINT "Message_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Note" ADD CONSTRAINT "Note_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Note" ADD CONSTRAINT "Note_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Task" ADD CONSTRAINT "Task_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_SkillToUser" ADD CONSTRAINT "_SkillToUser_A_fkey" FOREIGN KEY ("A") REFERENCES "Skill"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_SkillToUser" ADD CONSTRAINT "_SkillToUser_B_fkey" FOREIGN KEY ("B") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_DomainToUser" ADD CONSTRAINT "_DomainToUser_A_fkey" FOREIGN KEY ("A") REFERENCES "Domain"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_DomainToUser" ADD CONSTRAINT "_DomainToUser_B_fkey" FOREIGN KEY ("B") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = '_DomainToUser_B_fkey') THEN
+    ALTER TABLE "_DomainToUser" ADD CONSTRAINT "_DomainToUser_B_fkey" FOREIGN KEY ("B") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
