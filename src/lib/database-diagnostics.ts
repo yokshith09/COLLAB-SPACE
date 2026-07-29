@@ -108,12 +108,16 @@ export function getDatabaseDiagnostic(error: unknown): DatabaseDiagnostic {
 
   if (
     text.includes("database_url") ||
+    codes.includes("ERR_INVALID_URL") ||
+    text.includes("err_invalid_url") ||
+    text.includes("invalid url") ||
     text.includes("environment variable not found") ||
     text.includes("connection string")
   ) {
     return {
-      code: "DATABASE_URL_MISSING",
-      message: "DATABASE_URL is missing or invalid in Vercel Production environment variables.",
+      code: codes.includes("ERR_INVALID_URL") ? "ERR_INVALID_URL" : "DATABASE_URL_MISSING",
+      message:
+        "DATABASE_URL is invalid. URL-encode special characters in the database password, then redeploy.",
     };
   }
 
