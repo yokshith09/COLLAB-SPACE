@@ -6,7 +6,6 @@ import {
   Users, MessageSquare, CheckSquare, Search, ArrowRight,
   Globe, Zap, Shield, Sparkles, ChevronRight, Star
 } from "lucide-react";
-import { motion } from "framer-motion";
 
 const features = [
   {
@@ -31,8 +30,8 @@ const features = [
   },
   {
     icon: Shield,
-    title: "Transparent Health",
-    description: "Admin activity badges — Active, Slow, or Ghost. No more dead projects.",
+    title: "Project health",
+    description: "Activity badges show which projects are moving and which need attention.",
   },
   {
     icon: Globe,
@@ -68,67 +67,44 @@ const stats = [
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden py-20 md:py-32 px-4 flex items-center justify-center min-h-[90vh]">
-          {/* Background gradient and glow */}
-          <div className="absolute inset-0 bg-background" />
-          <div className="glow-bg top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary rounded-[100%]" />
-          <div className="glow-bg bottom-0 right-0 w-[600px] h-[600px] bg-accent rounded-[100%]" />
+        <section className="relative flex min-h-[calc(100dvh-4rem)] items-center overflow-hidden border-b bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_58%,#eef6f5_100%)] px-4 py-16 md:py-24">
+          <div className="glow-bg left-1/2 top-8 h-[420px] w-[680px] -translate-x-1/2 rounded-[100%] bg-primary" />
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="relative max-w-5xl mx-auto text-center space-y-10 z-10"
-          >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-primary/20 glass text-sm font-medium text-foreground shadow-sm"
-            >
-              <span className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_var(--color-primary)]" />
-              Next-generation collaboration platform
-            </motion.div>
+          <div className="relative z-10 mx-auto max-w-5xl space-y-8 text-center">
+            <div className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-semibold text-foreground shadow-sm">
+              <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+              Student project collaboration
+            </div>
 
-            <h1 className="text-6xl md:text-8xl font-extrabold tracking-tight leading-[1.1]">
+            <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight text-foreground sm:text-6xl md:text-7xl">
               Find your next <br className="hidden md:block" />
               <span className="text-gradient">co-founder</span>
               <br />
               or teammate
             </h1>
 
-            <p className="text-lg md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            <p className="mx-auto max-w-3xl text-lg leading-8 text-muted-foreground md:text-xl">
               Post project ideas, recruit matching teammates, and collaborate with full transparency.
               Built for the fastest shipping students, hackers, and builders.
             </p>
 
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center pt-6"
-            >
+            <div className="flex flex-col justify-center gap-4 pt-4 sm:flex-row">
               <Link href="/sign-up">
-                <Button size="lg" className="h-14 px-10 text-lg rounded-full gap-2 shadow-lg hover:shadow-primary/25 hover:-translate-y-1 transition-all">
-                  Start Building <ArrowRight className="h-5 w-5" />
+                <Button size="lg" className="h-12 px-8 text-base">
+                  Start building <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/projects">
-                <Button size="lg" variant="outline" className="h-14 px-10 text-lg rounded-full gap-2 glass hover:bg-muted/50 transition-all">
-                  Browse Projects <ChevronRight className="h-5 w-5" />
+                <Button size="lg" variant="outline" className="h-12 px-8 text-base">
+                  Browse projects <ChevronRight className="h-5 w-5" />
                 </Button>
               </Link>
-            </motion.div>
+            </div>
 
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="flex flex-wrap items-center justify-center gap-8 pt-10 text-sm font-medium text-muted-foreground"
-            >
+            <div className="flex flex-wrap items-center justify-center gap-6 pt-6 text-sm font-semibold text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-primary" />
                 <span>Public by default</span>
@@ -141,12 +117,12 @@ export default function HomePage() {
                 <Sparkles className="h-5 w-5 text-primary" />
                 <span>AI-assisted matching</span>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </section>
 
         {/* Stats Section */}
-        <section className="py-16 px-4 border-y bg-muted/30">
+        <section className="border-b bg-card px-4 py-14">
           <div className="max-w-5xl mx-auto">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {stats.map((stat) => (
@@ -160,11 +136,11 @@ export default function HomePage() {
         </section>
 
         {/* How It Works */}
-        <section id="how-it-works" className="py-20 md:py-28 px-4">
+        <section id="how-it-works" className="px-4 py-20 md:py-24">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">How it works</h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              <h2 className="mb-4 text-3xl font-bold text-foreground md:text-4xl">How it works</h2>
+              <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
                 Three simple steps to find your team and start building
               </p>
             </div>
@@ -176,7 +152,7 @@ export default function HomePage() {
                     <div className="hidden md:block absolute top-10 left-[calc(50%+60px)] right-[calc(-50%+60px)] h-px bg-border" />
                   )}
                   <div className="relative text-center space-y-4">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 text-primary text-2xl font-bold">
+                    <div className="inline-flex h-20 w-20 items-center justify-center rounded-xl bg-accent text-2xl font-bold text-primary">
                       {step.number}
                     </div>
                     <h3 className="text-xl font-semibold">{step.title}</h3>
@@ -189,11 +165,11 @@ export default function HomePage() {
         </section>
 
         {/* Features Grid */}
-        <section id="features" className="py-20 md:py-28 px-4 bg-muted/30">
+        <section id="features" className="bg-muted px-4 py-20 md:py-24">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Everything you need</h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              <h2 className="mb-4 text-3xl font-bold text-foreground md:text-4xl">Everything you need</h2>
+              <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
                 All-in-one workspace for project collaboration
               </p>
             </div>
@@ -204,9 +180,9 @@ export default function HomePage() {
                 return (
                   <div
                     key={feature.title}
-                    className="group p-6 rounded-2xl border bg-card hover:shadow-lg hover:border-primary/20 transition-all duration-300"
+                    className="group rounded-xl border bg-card p-6 shadow-sm transition-all duration-200 hover:border-primary/40 hover:shadow-md"
                   >
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-4 group-hover:scale-110 transition-transform">
+                    <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-accent text-primary transition-transform group-hover:scale-105">
                       <Icon className="h-6 w-6" />
                     </div>
                     <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
@@ -219,7 +195,7 @@ export default function HomePage() {
         </section>
 
         {/* Testimonial */}
-        <section className="py-20 md:py-28 px-4">
+        <section className="px-4 py-20 md:py-24">
           <div className="max-w-3xl mx-auto text-center">
             <div className="flex items-center justify-center gap-1 mb-6">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -227,7 +203,7 @@ export default function HomePage() {
               ))}
             </div>
             <blockquote className="text-xl md:text-2xl font-medium leading-relaxed mb-6">
-              &ldquo;Found my co-founder on CollabSpace in just 3 days. The transparency of seeing who&apos;s active and who&apos;s ghosting made all the difference.&rdquo;
+              &ldquo;Found my co-founder on CollabSpace in just 3 days. Seeing active projects made the search feel direct and honest.&rdquo;
             </blockquote>
             <div className="flex items-center justify-center gap-3">
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-semibold text-primary">
@@ -242,7 +218,7 @@ export default function HomePage() {
         </section>
 
         {/* Final CTA */}
-        <section className="py-20 md:py-28 px-4 bg-primary text-primary-foreground">
+        <section className="bg-primary px-4 py-20 text-primary-foreground md:py-24">
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <h2 className="text-3xl md:text-4xl font-bold">
               Ready to find your team?
@@ -253,12 +229,12 @@ export default function HomePage() {
             <div className="flex flex-wrap gap-4 justify-center pt-2">
               <Link href="/sign-up">
                 <Button size="lg" variant="secondary" className="text-base px-8 gap-2">
-                  Get Started Free <ArrowRight className="h-5 w-5" />
+                  Get started <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/projects">
-                <Button size="lg" variant="outline" className="text-base px-8 text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10">
-                  Browse Projects
+                <Button size="lg" variant="outline" className="border-white bg-primary text-white hover:bg-white hover:text-primary">
+                  Browse projects
                 </Button>
               </Link>
             </div>
@@ -267,7 +243,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t py-12 px-4">
+      <footer className="border-t bg-card px-4 py-12">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div>

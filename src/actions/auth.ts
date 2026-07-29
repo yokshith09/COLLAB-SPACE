@@ -3,6 +3,24 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
+function getRegistrationErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  const code = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
+
+  if (
+    code === "P1001" ||
+    code === "P2021" ||
+    message.includes("ECONNREFUSED") ||
+    message.includes("ETIMEDOUT") ||
+    message.includes("ENOTFOUND") ||
+    message.includes("Can't reach database")
+  ) {
+    return "Database connection failed. Check DATABASE_URL in Vercel, then run npx prisma db push.";
+  }
+
+  return "We could not create your account. Check the server logs for Registration error.";
+}
+
 export async function registerUser(formData: FormData) {
   const name = ((formData.get("name") as string) || "").trim();
   const email = ((formData.get("email") as string) || "").trim().toLowerCase();
@@ -54,6 +72,6 @@ export async function registerUser(formData: FormData) {
     return { success: true };
   } catch (error) {
     console.error("Registration error:", error);
-    return { error: "We could not create your account. Please try again." };
+    return { error: getRegistrationErrorMessage(error) };
   }
 }

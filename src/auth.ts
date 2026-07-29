@@ -23,16 +23,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!email || !password) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            password: true,
-            avatar: true,
-          },
-        });
+        const user = await prisma.user
+          .findUnique({
+            where: { email },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              password: true,
+              avatar: true,
+            },
+          })
+          .catch((error) => {
+            console.error("AUTH_DATABASE_ERROR:", error);
+            throw error;
+          });
 
         if (!user?.password) return null;
 

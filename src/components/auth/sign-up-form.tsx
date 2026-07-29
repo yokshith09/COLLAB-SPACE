@@ -46,7 +46,8 @@ export function SignUpForm() {
         router.push("/dashboard");
         router.refresh();
       }
-    } catch {
+    } catch (error) {
+      console.error("SIGN_UP_EXCEPTION", error);
       setError("We could not create your account. Please try again.");
     } finally {
       setIsLoading(false);

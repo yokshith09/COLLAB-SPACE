@@ -9,8 +9,8 @@ export async function Navbar() {
   const userId = session?.user?.id;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/80 bg-card/92 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/75">
-      <div className="flex h-14 items-center px-4 gap-4 max-w-7xl mx-auto">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-card shadow-sm">
+      <div className="flex h-16 items-center px-4 gap-4 max-w-7xl mx-auto">
         <Link href="/" className="font-bold text-lg tracking-tight text-foreground mr-4">
           CollabSpace
         </Link>
@@ -35,7 +35,7 @@ export async function Navbar() {
             <SignOutButton />
           ) : (
             <>
-              <Link href="/sign-in"><Button variant="ghost" size="sm">Sign In</Button></Link>
+              <Link href="/sign-in"><Button variant="outline" size="sm">Sign In</Button></Link>
               <Link href="/sign-up"><Button size="sm">Get Started</Button></Link>
             </>
           )}

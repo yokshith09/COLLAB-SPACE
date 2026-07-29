@@ -46,13 +46,19 @@ export function SignInForm() {
       });
 
       if (res?.error || res?.ok === false) {
-        setError("The email or password does not match an account.");
+        console.error("SIGN_IN_ERROR", res);
+        setError(
+          res?.error === "CredentialsSignin"
+            ? "The email or password does not match an account."
+            : "Authentication service failed. Check DATABASE_URL, AUTH_SECRET, and the Vercel function logs."
+        );
       } else {
         router.push(getSafeCallbackUrl());
         router.refresh();
       }
-    } catch {
-      setError("Sign in failed. Check your connection and try again.");
+    } catch (error) {
+      console.error("SIGN_IN_EXCEPTION", error);
+      setError("Sign in failed. Check DATABASE_URL, AUTH_SECRET, and the Vercel function logs.");
     } finally {
       setIsLoading(false);
     }
