@@ -104,7 +104,7 @@ export function getDatabaseDiagnostic(error: unknown): DatabaseDiagnostic {
     return {
       code: codes.includes("P1001") ? "P1001" : "DB_UNREACHABLE",
       message:
-        "Database connection failed. Use the Supabase transaction pooler DATABASE_URL in Vercel Production.",
+        "DB Error: " + (text.substring(0, 150) || "Unknown connection error").replace(/\n/g, " "),
     };
   }
 
@@ -126,7 +126,7 @@ export function getDatabaseDiagnostic(error: unknown): DatabaseDiagnostic {
   return {
     code: codes[0] ?? "REGISTRATION_ERROR",
     message:
-      "Registration failed before the account could be saved. Open Vercel Runtime Logs and search for Registration error.",
+      "Registration failed: " + (text.substring(0, 150) || "Unknown error").replace(/\n/g, " "),
   };
 }
 
