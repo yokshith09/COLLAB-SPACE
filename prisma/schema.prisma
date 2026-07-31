@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
 }
 
 enum ProjectStatus {
@@ -28,7 +28,7 @@ enum TaskStatus {
 }
 
 model User {
-  id            String         @id @default(cuid())
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   email         String         @unique
   password      String?
@@ -38,8 +38,13 @@ model User {
   linkedinUrl   String?
   lastLoginAt   DateTime       @default(now())
   createdAt     DateTime       @default(now())
-  skills        Skill[]
-  domains       Domain[]
+  
+  skillIds      String[]       @db.ObjectId
+  skills        Skill[]        @relation(fields: [skillIds], references: [id])
+  
+  domainIds     String[]       @db.ObjectId
+  domains       Domain[]       @relation(fields: [domainIds], references: [id])
+  
   projectsOwned Project[]      @relation("Owner")
   teams         TeamMember[]
   applications  Application[]
@@ -49,7 +54,7 @@ model User {
 }
 
 model Project {
-  id               String        @id @default(cuid())
+  id               String        @id @default(auto()) @map("_id") @db.ObjectId
   title            String
   description      String
   problemStatement String
@@ -59,7 +64,7 @@ model Project {
   deadline         DateTime?
   isPrivate        Boolean       @default(false)
   inviteCode       String?       @unique
-  ownerId          String
+  ownerId          String        @db.ObjectId
   owner            User          @relation("Owner", fields: [ownerId], references: [id])
   domain           String
   applications     Application[]
@@ -76,9 +81,9 @@ model Project {
 }
 
 model Application {
-  id        String   @id @default(cuid())
-  userId    String
-  projectId String
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  projectId String   @db.ObjectId
   message   String
   status    AppStatus @default(PENDING)
   expiresAt DateTime
@@ -93,9 +98,9 @@ model Application {
 }
 
 model TeamMember {
-  id            String    @id @default(cuid())
-  userId        String
-  projectId     String
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String    @db.ObjectId
+  projectId     String    @db.ObjectId
   role          String    @default("member")
   joinedAt      DateTime  @default(now())
   removedAt     DateTime?
@@ -109,10 +114,10 @@ model TeamMember {
 }
 
 model Message {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   content   String
-  senderId  String
-  projectId String
+  senderId  String   @db.ObjectId
+  projectId String   @db.ObjectId
   createdAt DateTime @default(now())
   sender    User     @relation(fields: [senderId], references: [id])
   project   Project  @relation(fields: [projectId], references: [id])
@@ -121,11 +126,11 @@ model Message {
 }
 
 model Note {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   title     String
   content   String
-  projectId String
-  createdBy String
+  projectId String   @db.ObjectId
+  createdBy String   @db.ObjectId
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   project   Project  @relation(fields: [projectId], references: [id])
@@ -135,13 +140,13 @@ model Note {
 }
 
 model Task {
-  id          String     @id @default(cuid())
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   description String?
   status      TaskStatus @default(TODO)
-  assignedTo  String?
+  assignedTo  String?    @db.ObjectId
   dueDate     DateTime?
-  projectId   String
+  projectId   String     @db.ObjectId
   createdAt   DateTime   @default(now())
   project     Project    @relation(fields: [projectId], references: [id])
 
@@ -150,8 +155,8 @@ model Task {
 }
 
 model Notification {
-  id        String   @id @default(cuid())
-  userId    String
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
   type      String
   message   String
   isRead    Boolean  @default(false)
@@ -164,13 +169,15 @@ model Notification {
 }
 
 model Skill {
-  id    String @id @default(cuid())
-  name  String @unique
-  users User[]
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  name    String   @unique
+  userIds String[] @db.ObjectId
+  users   User[]   @relation(fields: [userIds], references: [id])
 }
 
 model Domain {
-  id    String @id @default(cuid())
-  name  String @unique
-  users User[]
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  name    String   @unique
+  userIds String[] @db.ObjectId
+  users   User[]   @relation(fields: [userIds], references: [id])
 }
