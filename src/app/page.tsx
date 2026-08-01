@@ -86,13 +86,19 @@ export default function HomePage() {
               or teammate
             </h1>
 
+              Find your next <br className="hidden md:block" />
+              <span className="text-gradient">co-founder</span>
+              <br />
+              or teammate
+            </h1>
+
             <p className="mx-auto max-w-3xl text-lg leading-8 text-muted-foreground md:text-xl">
               Post project ideas, recruit matching teammates, and collaborate with full transparency.
               Built for the fastest shipping students, hackers, and builders.
             </p>
 
             <div className="flex flex-col justify-center gap-4 pt-4 sm:flex-row">
-              <Link href="/sign-up">
+              <Link href="/projects">
                 <Button size="lg" className="h-12 px-8 text-base">
                   Start building <ArrowRight className="h-5 w-5" />
                 </Button>
@@ -227,7 +233,7 @@ export default function HomePage() {
               Join thousands of builders who are finding teammates and shipping projects together.
             </p>
             <div className="flex flex-wrap gap-4 justify-center pt-2">
-              <Link href="/sign-up">
+              <Link href="/projects">
                 <Button size="lg" variant="secondary" className="text-base px-8 gap-2">
                   Get started <ArrowRight className="h-5 w-5" />
                 </Button>
@@ -244,34 +250,6 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t bg-card px-4 py-12">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div>
-              <Link href="/" className="font-bold text-lg text-primary">CollabSpace</Link>
-              <p className="text-sm text-muted-foreground mt-2">
-                Build together, transparently.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-sm mb-3">Platform</h4>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <Link href="/projects" className="block hover:text-foreground transition-colors">Discover</Link>
-                <Link href="/projects/new" className="block hover:text-foreground transition-colors">Create Project</Link>
-                <Link href="/dashboard" className="block hover:text-foreground transition-colors">Dashboard</Link>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold text-sm mb-3">Account</h4>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <Link href="/sign-in" className="block hover:text-foreground transition-colors">Sign In</Link>
-                <Link href="/sign-up" className="block hover:text-foreground transition-colors">Sign Up</Link>
-                <Link href="/notifications" className="block hover:text-foreground transition-colors">Notifications</Link>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold text-sm mb-3">Legal</h4>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <span className="block">Privacy Policy</span>
                 <span className="block">Terms of Service</span>
                 <span className="block">Cookie Policy</span>
               </div>
