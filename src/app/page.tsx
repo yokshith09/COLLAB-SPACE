@@ -86,11 +86,7 @@ export default function HomePage() {
               or teammate
             </h1>
 
-              Find your next <br className="hidden md:block" />
-              <span className="text-gradient">co-founder</span>
-              <br />
-              or teammate
-            </h1>
+
 
             <p className="mx-auto max-w-3xl text-lg leading-8 text-muted-foreground md:text-xl">
               Post project ideas, recruit matching teammates, and collaborate with full transparency.
