@@ -246,6 +246,32 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t bg-card px-4 py-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div>
+              <Link href="/" className="font-bold text-lg text-primary">CollabSpace</Link>
+              <p className="text-sm text-muted-foreground mt-2">
+                Build together, transparently.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-sm mb-3">Platform</h4>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <Link href="/projects" className="block hover:text-foreground transition-colors">Discover</Link>
+                <Link href="/projects/new" className="block hover:text-foreground transition-colors">Create Project</Link>
+                <Link href="/dashboard" className="block hover:text-foreground transition-colors">Dashboard</Link>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-sm mb-3">Account</h4>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <Link href="/notifications" className="block hover:text-foreground transition-colors">Notifications</Link>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-sm mb-3">Legal</h4>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <span className="block">Privacy Policy</span>
                 <span className="block">Terms of Service</span>
                 <span className="block">Cookie Policy</span>
               </div>
