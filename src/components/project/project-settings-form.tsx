@@ -21,6 +21,7 @@ interface ProjectSettingsFormProps {
     deadline?: Date | null;
     isPrivate: boolean;
     inviteCode?: string | null;
+    githubWebhookSecret?: string | null;
   };
   allSkills: string[];
   allDomains: string[];
@@ -70,6 +71,7 @@ export function ProjectSettingsForm({ project, allSkills, allDomains, userId }: 
       requiredSkills: selectedSkills,
       deadline: form.get("deadline") ? new Date(form.get("deadline") as string) : null,
       isPrivate: form.get("isPrivate") === "on",
+      githubWebhookSecret: form.get("githubWebhookSecret") as string || null,
     };
 
     const res = await fetch(`/api/projects/${project.id}`, {
@@ -243,6 +245,26 @@ export function ProjectSettingsForm({ project, allSkills, allDomains, userId }: 
             Invite link: {typeof window !== "undefined" && `${window.location.origin}/invite/${project.inviteCode}`}
           </div>
         )}
+      </div>
+
+      <div className="p-6 rounded-xl border bg-card space-y-4">
+        <h2 className="text-lg font-semibold">GitHub Integration</h2>
+        <div className="space-y-2">
+          <Label htmlFor="githubWebhookSecret">Webhook Secret</Label>
+          <Input
+            id="githubWebhookSecret"
+            name="githubWebhookSecret"
+            type="password"
+            placeholder="Secret used for GitHub webhooks (Optional)"
+            defaultValue={project.githubWebhookSecret || ""}
+          />
+          <p className="text-xs text-muted-foreground">
+            Paste this webhook URL in your GitHub repo settings: <br/>
+            <code className="bg-muted px-1 py-0.5 rounded select-all font-mono text-primary">
+              {typeof window !== "undefined" ? `${window.location.origin}/api/webhooks/github?projectId=${project.id}` : ''}
+            </code>
+          </p>
+        </div>
       </div>
 
       <div className="flex gap-2">

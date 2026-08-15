@@ -18,6 +18,7 @@ export interface IProject extends Document {
   gallery?: string[];
   ownerId: mongoose.Types.ObjectId;
   domain: string;
+  githubWebhookSecret?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +43,7 @@ const ProjectSchema = new Schema<IProject>(
     gallery: [{ type: String }],
     ownerId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     domain: { type: String, required: true },
+    githubWebhookSecret: { type: String },
   },
   { timestamps: true }
 );

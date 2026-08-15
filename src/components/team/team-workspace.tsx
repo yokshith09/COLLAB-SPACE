@@ -264,7 +264,21 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
                       }}
                       onDragEnd={() => setDraggingTaskId(null)}
                     >
-                      <p className="text-sm font-medium">{t.title}</p>
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="text-sm font-medium pr-6">{t.title}</p>
+                        <button 
+                          onClick={() => {
+                            if (typeof window !== "undefined") {
+                              navigator.clipboard.writeText(t.id);
+                              toast({ title: "Task ID copied!", description: `Use "Fixes #${t.id}" in your GitHub PR.` });
+                            }
+                          }}
+                          className="text-[10px] bg-muted hover:bg-muted-foreground/20 text-muted-foreground px-1.5 py-0.5 rounded cursor-copy transition-colors"
+                          title="Copy Task ID for GitHub"
+                        >
+                          #{t.id.substring(t.id.length - 6)}
+                        </button>
+                      </div>
                       {t.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{t.description}</p>}
                       <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
                         <span>{t.assignedTo ? project.team.find((m: any) => m.userId === t.assignedTo)?.user?.name || "Unknown" : "Unassigned"}</span>

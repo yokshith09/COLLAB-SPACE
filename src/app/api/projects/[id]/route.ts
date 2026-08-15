@@ -17,7 +17,7 @@ export async function PUT(req: Request, { params }: Ctx) {
   if (project.ownerId.toString() !== user._id.toString()) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
-  const { title, description, problemStatement, domain, teamSizeMax, requiredSkills, deadline, isPrivate } = await req.json();
+  const { title, description, problemStatement, domain, teamSizeMax, requiredSkills, deadline, isPrivate, githubWebhookSecret } = await req.json();
   if (title) project.title = title.trim();
   if (description) project.description = description.trim();
   if (problemStatement) project.problemStatement = problemStatement.trim();
@@ -26,6 +26,7 @@ export async function PUT(req: Request, { params }: Ctx) {
   if (requiredSkills) project.requiredSkills = requiredSkills;
   if (deadline !== undefined) project.deadline = deadline ? new Date(deadline) : undefined;
   if (isPrivate !== undefined) project.isPrivate = isPrivate;
+  if (githubWebhookSecret !== undefined) project.githubWebhookSecret = githubWebhookSecret;
   await project.save();
   return NextResponse.json({ ...project.toObject(), id: project._id.toString() });
 }
