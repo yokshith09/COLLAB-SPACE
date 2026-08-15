@@ -8,6 +8,8 @@ import {
   Globe, Zap, Shield, Sparkles, ChevronRight, Star, BookOpen
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 const features = [
   {
     icon: Search,
