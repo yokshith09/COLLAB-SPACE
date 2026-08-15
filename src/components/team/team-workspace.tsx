@@ -27,6 +27,7 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
   const [taskDesc, setTaskDesc] = useState("");
   const [taskAssignee, setTaskAssignee] = useState("");
   const [taskDue, setTaskDue] = useState("");
+  const [taskBounty, setTaskBounty] = useState("");
   const [activeTab, setActiveTab] = useState("chat");
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
   const chatEnd = useRef<HTMLDivElement>(null);
@@ -84,12 +85,12 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
     const res = await fetch("/api/teams/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ projectId: project.id, title: taskTitle, description: taskDesc || null, assignedTo: taskAssignee || null, dueDate: taskDue || null }),
+      body: JSON.stringify({ projectId: project.id, title: taskTitle, description: taskDesc || null, assignedTo: taskAssignee || null, dueDate: taskDue || null, bountyAmount: taskBounty || null }),
     });
     if (res.ok) {
       const task = await res.json();
       setTasks((prev) => [task, ...prev]);
-      setTaskOpen(false); setTaskTitle(""); setTaskDesc(""); setTaskAssignee(""); setTaskDue("");
+      setTaskOpen(false); setTaskTitle(""); setTaskDesc(""); setTaskAssignee(""); setTaskDue(""); setTaskBounty("");
       toast({ title: "Task created" });
     }
   }
@@ -229,6 +230,7 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
                     {project.team.map((m: any) => <option key={m.id} value={m.userId}>{m.user.name}</option>)}
                   </select>
                   <Input type="date" value={taskDue} onChange={(e) => setTaskDue(e.target.value)} />
+                  <Input type="number" placeholder="Bounty ($) (optional)" value={taskBounty} onChange={(e) => setTaskBounty(e.target.value)} min={0} />
                   <Button className="w-full" onClick={createTask} disabled={!taskTitle.trim()}>Create Task</Button>
                 </div>
               </DialogContent>
@@ -268,6 +270,11 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
                         <span>{t.assignedTo ? project.team.find((m: any) => m.userId === t.assignedTo)?.user?.name || "Unknown" : "Unassigned"}</span>
                         {t.dueDate && <span>{timeAgo(t.dueDate)}</span>}
                       </div>
+                      {t.bountyAmount && (
+                        <div className="mt-2 text-[10px] font-bold text-green-600 bg-green-500/10 inline-flex px-2 py-0.5 rounded-full items-center gap-1 border border-green-500/20">
+                          💰 ${t.bountyAmount} {t.bountyStatus === "CLAIMED" ? "(Claimed)" : ""}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

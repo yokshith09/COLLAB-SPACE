@@ -8,8 +8,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const session = await auth();
   if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   await connectDB();
-  const { status } = await req.json();
-  const task = await Task.findByIdAndUpdate(id, { status }, { new: true });
+  const { status, bountyStatus } = await req.json();
+  const updateData: any = { status };
+  if (bountyStatus) updateData.bountyStatus = bountyStatus;
+  const task = await Task.findByIdAndUpdate(id, updateData, { new: true });
   if (!task) return NextResponse.json({ error: "Task not found" }, { status: 404 });
   return NextResponse.json({ ...task.toObject(), id: task._id.toString() });
 }

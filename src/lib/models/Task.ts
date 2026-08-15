@@ -10,6 +10,8 @@ export interface ITask extends Document {
   assignedTo?: mongoose.Types.ObjectId;
   dueDate?: Date;
   projectId: mongoose.Types.ObjectId;
+  bountyAmount?: number;
+  bountyStatus?: "OPEN" | "CLAIMED" | "PAID";
   createdAt: Date;
 }
 
@@ -25,6 +27,8 @@ const TaskSchema = new Schema<ITask>(
     assignedTo: { type: Schema.Types.ObjectId, ref: "User" },
     dueDate: { type: Date },
     projectId: { type: Schema.Types.ObjectId, ref: "Project", required: true },
+    bountyAmount: { type: Number },
+    bountyStatus: { type: String, enum: ["OPEN", "CLAIMED", "PAID"], default: "OPEN" },
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );

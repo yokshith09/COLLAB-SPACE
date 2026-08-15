@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   await connectDB();
   const user = await User.findOne({ email: session.user.email });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-  const { projectId, title, description, assignedTo, dueDate } = await req.json();
+  const { projectId, title, description, assignedTo, dueDate, bountyAmount } = await req.json();
   const membership = await TeamMember.findOne({ userId: user._id, projectId });
   if (!membership) return NextResponse.json({ error: "Not a team member" }, { status: 403 });
   const task = await Task.create({
@@ -18,6 +18,7 @@ export async function POST(req: Request) {
     projectId,
     assignedTo: assignedTo || undefined,
     dueDate: dueDate ? new Date(dueDate) : undefined,
+    bountyAmount: bountyAmount ? Number(bountyAmount) : undefined,
   });
   if (assignedTo && assignedTo !== user._id.toString()) {
     await Notification.create({
