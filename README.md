@@ -101,6 +101,10 @@ We welcome contributions to make COLLAB-SPACE even better!
 4. **Push** to the branch (`git push origin feature/amazing-feature`)
 5. **Open** a Pull Request
 
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE) - see the LICENSE file for details.
+
 ---
 
 <div align="center">
