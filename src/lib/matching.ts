@@ -88,3 +88,44 @@ export async function getRecommendedUsers(projectId: string) {
     .sort((a, b) => b.matchScore - a.matchScore)
     .slice(0, 5); // Top 5 recommended users
 }
+
+export async function getPotentialCoFounders(projectId: string) {
+  await connectDB();
+  
+  const project = await Project.findById(projectId).lean();
+  if (!project) return [];
+
+  const projectSkills = new Set((project.requiredSkills || []).map((s: string) => s.toLowerCase()));
+  const projectDomain = project.domain?.toLowerCase();
+
+  // Find other OPEN projects not owned by this user
+  const otherProjects = await Project.find({
+    _id: { $ne: project._id },
+    ownerId: { $ne: project.ownerId },
+    status: "OPEN"
+  }).populate("ownerId", "name avatar bio githubUrl").lean();
+
+  const scoredMatches = otherProjects.map((other: any) => {
+    let score = 0;
+    let matchedSkills = 0;
+
+    const otherSkills = other.requiredSkills || [];
+    for (const skill of otherSkills) {
+      if (projectSkills.has(skill.toLowerCase())) {
+        score += SKILL_MATCH_WEIGHT;
+        matchedSkills++;
+      }
+    }
+
+    if (other.domain?.toLowerCase() === projectDomain) {
+      score += DOMAIN_MATCH_WEIGHT * 2; // Domain is heavily weighted for similar projects
+    }
+
+    return { ...other, matchScore: score, matchedSkills };
+  });
+
+  return scoredMatches
+    .filter(p => p.matchScore > 0)
+    .sort((a, b) => b.matchScore - a.matchScore)
+    .slice(0, 3); // Top 3 similar projects / co-founders
+}

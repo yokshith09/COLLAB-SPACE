@@ -88,9 +88,11 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const currentUser = dbUser ? { id: dbUser._id.toString(), name: dbUser.name, email: dbUser.email, avatar: dbUser.avatar } : null;
 
   let recommendedUsers: any[] = [];
+  let potentialCoFounders: any[] = [];
   if (isOwner && project.status === "OPEN") {
-    const { getRecommendedUsers } = await import("@/lib/matching");
+    const { getRecommendedUsers, getPotentialCoFounders } = await import("@/lib/matching");
     recommendedUsers = await getRecommendedUsers(projectId);
+    potentialCoFounders = await getPotentialCoFounders(projectId);
   }
 
   return (
@@ -108,6 +110,17 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         bio: u.bio,
         skills: u.skills || [],
         matchScore: u.matchScore
+      }))}
+      potentialCoFounders={potentialCoFounders.map((p: any) => ({
+        id: p._id.toString(),
+        title: p.title,
+        description: p.description,
+        matchScore: p.matchScore,
+        owner: {
+          id: p.ownerId._id.toString(),
+          name: p.ownerId.name,
+          avatar: p.ownerId.avatar,
+        }
       }))}
     />
   );

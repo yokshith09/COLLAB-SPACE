@@ -126,17 +126,15 @@ export default async function HomePage() {
 
             <AnimateIn direction="up" delay={0.2}>
               <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight text-foreground sm:text-6xl md:text-7xl">
-                Find your next <br className="hidden md:block" />
-                <span className="text-gradient">co-founder</span>
+                Where Ideas Meet <span className="text-gradient">Execution.</span>
                 <br />
-                or teammate
+                Find your Co-Founder.
               </h1>
             </AnimateIn>
 
             <AnimateIn direction="up" delay={0.3}>
               <p className="mx-auto max-w-3xl text-lg leading-8 text-muted-foreground md:text-xl">
-                Post project ideas, recruit matching teammates, and collaborate with full transparency.
-                Built for the fastest shipping students, hackers, and builders.
+                Stop building alone. COLLAB-SPACE connects you with the perfect teammates, syncs your GitHub workflow, and gives you the tools to ship faster.
               </p>
             </AnimateIn>
 

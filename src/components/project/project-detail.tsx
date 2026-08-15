@@ -28,9 +28,10 @@ interface ProjectDetailProps {
   allApplications: any[];
   currentUser: any;
   recommendedUsers?: any[];
+  potentialCoFounders?: any[];
 }
 
-export function ProjectDetail({ project, isOwner, isMember, userApplication, allApplications, currentUser, recommendedUsers = [] }: ProjectDetailProps) {
+export function ProjectDetail({ project, isOwner, isMember, userApplication, allApplications, currentUser, recommendedUsers = [], potentialCoFounders = [] }: ProjectDetailProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [applyOpen, setApplyOpen] = useState(false);
@@ -473,6 +474,41 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
                         </div>
                       )}
                     </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {isOwner && potentialCoFounders && potentialCoFounders.length > 0 && (
+            <section className="space-y-3 mt-8">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                <h2 className="font-semibold text-lg">Potential Co-Founders (Similar Projects)</h2>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">These users are building similar projects. Reach out to merge ideas!</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {potentialCoFounders.map((p: any) => (
+                  <div key={p.id} className="p-4 rounded-xl border bg-card hover:border-primary/50 transition-colors relative overflow-hidden flex flex-col">
+                    <div className="absolute top-0 right-0 bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded-bl-lg flex items-center gap-1 shadow-sm">
+                      <Sparkles className="w-3 h-3" /> {p.matchScore} Match
+                    </div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Avatar className="h-8 w-8 border">
+                        <AvatarImage src={p.owner.avatar || ""} />
+                        <AvatarFallback>{p.owner.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <Link href={`/profile/${p.owner.id}`} className="font-semibold text-sm hover:underline hover:text-primary transition-colors">
+                        {p.owner.name}
+                      </Link>
+                    </div>
+                    <h3 className="font-bold text-sm mb-1 line-clamp-1">{p.title}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mb-4 flex-1">{p.description}</p>
+                    <Button variant="outline" size="sm" className="w-full gap-2 mt-auto" asChild>
+                      <Link href={`/projects/${p.id}`}>
+                        <ExternalLink className="h-3 w-3" /> View Project
+                      </Link>
+                    </Button>
                   </div>
                 ))}
               </div>
