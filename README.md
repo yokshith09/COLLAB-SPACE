@@ -101,6 +101,41 @@ We welcome contributions to make COLLAB-SPACE even better!
 4. **Push** to the branch (`git push origin feature/amazing-feature`)
 5. **Open** a Pull Request
 
+## 📸 Gallery
+
+> *Tip: Add a screenshot of your dashboard here*
+> `![Dashboard Screenshot](/public/dashboard-preview.png)`
+
+## 🌍 Environment Variables
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | MongoDB connection string |
+| `AUTH_SECRET` | NextAuth secret key |
+| `AUTH_URL` | The canonical URL of your site (e.g., `http://localhost:3000`) |
+| `NEXT_PUBLIC_APP_URL` | Application base URL |
+
+## 🚀 Deployment
+
+1. Set up a MongoDB cluster and get your connection string.
+2. Fork this repository or clone it locally.
+3. Push to your own GitHub repository.
+4. Import your repository into **Vercel** or **Netlify**.
+5. Add the environment variables from `.env.example` in the deployment dashboard.
+6. Deploy!
+
+## 🗺️ Roadmap
+
+- [ ] Video & Audio Calls Integration
+- [ ] AI-Powered Task Recommendations
+- [ ] Slack/Discord Webhooks integration
+- [ ] Automated Code Review using GitHub Actions
+
+## 🤝 Contact / Authors
+
+- **Author**: COLLAB-SPACE Team
+- **GitHub**: [yokshith09](https://github.com/yokshith09)
+
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE) - see the LICENSE file for details.
