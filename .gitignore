@@ -47,3 +47,4 @@ next-env.d.ts
 dev-server*.log
 dev-codex*.log
 .playwright-cli/
+output.html

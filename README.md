@@ -9,7 +9,7 @@ cp .env.example .env.local
 npx auth secret
 ```
 
-The app uses Auth.js credentials auth with users stored in the Prisma `User` table. Clerk keys are no longer required.
+The app uses Auth.js credentials auth with users stored in the MongoDB `User` collection via Mongoose. Ensure your `DATABASE_URL` is configured for your MongoDB connection. There are also local run scripts like `run.bat` or `check-and-run.ps1` in the root.
 
 First, run the development server:
 

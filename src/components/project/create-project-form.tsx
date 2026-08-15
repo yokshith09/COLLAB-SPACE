@@ -64,12 +64,12 @@ export function CreateProjectForm({ skills, domains, activeCount, maxActive, use
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">Description <span className="text-muted-foreground font-normal">(Markdown supported)</span></Label>
         <Textarea id="description" name="description" required placeholder="Brief overview of your project idea..." rows={3} />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="problemStatement">Problem Statement</Label>
+        <Label htmlFor="problemStatement">Problem Statement <span className="text-muted-foreground font-normal">(Markdown supported)</span></Label>
         <Textarea id="problemStatement" name="problemStatement" required placeholder="What problem are you solving? Who is it for?" rows={3} />
       </div>
 

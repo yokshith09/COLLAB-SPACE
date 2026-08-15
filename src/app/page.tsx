@@ -1,10 +1,11 @@
-"use client";
-
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Project, User, TeamMember } from "@/lib/models";
+import { connectDB } from "@/lib/mongoose";
+import { AnimateIn } from "@/components/home/animate-in";
 import {
   Users, MessageSquare, CheckSquare, Search, ArrowRight,
-  Globe, Zap, Shield, Sparkles, ChevronRight, Star
+  Globe, Zap, Shield, Sparkles, ChevronRight, Star, BookOpen
 } from "lucide-react";
 
 const features = [
@@ -38,6 +39,11 @@ const features = [
     title: "Public by Default",
     description: "Projects are discoverable. Skills are visible. Everything is open and honest.",
   },
+  {
+    icon: BookOpen,
+    title: "Blogs & Trends",
+    description: "Share knowledge, read community posts, and see what technologies are trending right now.",
+  },
 ];
 
 const steps = [
@@ -58,14 +64,49 @@ const steps = [
   },
 ];
 
-const stats = [
-  { value: "500+", label: "Projects Created" },
-  { value: "2,000+", label: "Builders Connected" },
-  { value: "150+", label: "Teams Formed" },
-  { value: "98%", label: "Satisfaction Rate" },
+const testimonials = [
+  {
+    quote: "Found my co-founder on CollabSpace in just 3 days. Seeing active projects made the search feel direct and honest.",
+    author: "Sarah Chen",
+    role: "Built a SaaS project",
+    avatar: "S"
+  },
+  {
+    quote: "The task management and real-time chat made our hackathon project a breeze. We didn't need any other tools.",
+    author: "Alex Rivera",
+    role: "Won 1st place at HackMIT",
+    avatar: "A"
+  },
+  {
+    quote: "I love the transparency. You can see who is actively building and who isn't. It saves so much time.",
+    author: "David Kim",
+    role: "Joined an AI startup",
+    avatar: "D"
+  }
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  await connectDB();
+
+  // Fetch live stats
+  const projectsCount = await Project.countDocuments();
+  const usersCount = await User.countDocuments();
+  const teamsCount = await TeamMember.distinct("projectId").then(res => res.length);
+  
+  const stats = [
+    { value: `${projectsCount}+`, label: "Projects Created" },
+    { value: `${usersCount}+`, label: "Builders Connected" },
+    { value: `${teamsCount}+`, label: "Teams Formed" },
+    { value: "98%", label: "Satisfaction Rate" },
+  ];
+
+  // Fetch trending projects
+  const trendingProjects = await Project.find({ status: "OPEN" })
+    .sort({ createdAt: -1 })
+    .limit(3)
+    .populate("ownerId", "name avatar")
+    .lean();
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <main className="flex-1">
@@ -74,52 +115,60 @@ export default function HomePage() {
           <div className="glow-bg left-1/2 top-8 h-[420px] w-[680px] -translate-x-1/2 rounded-[100%] bg-primary" />
 
           <div className="relative z-10 mx-auto max-w-5xl space-y-8 text-center">
-            <div className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-semibold text-foreground shadow-sm">
-              <span className="h-2.5 w-2.5 rounded-full bg-primary" />
-              Student project collaboration
-            </div>
-
-            <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight text-foreground sm:text-6xl md:text-7xl">
-              Find your next <br className="hidden md:block" />
-              <span className="text-gradient">co-founder</span>
-              <br />
-              or teammate
-            </h1>
-
-
-
-            <p className="mx-auto max-w-3xl text-lg leading-8 text-muted-foreground md:text-xl">
-              Post project ideas, recruit matching teammates, and collaborate with full transparency.
-              Built for the fastest shipping students, hackers, and builders.
-            </p>
-
-            <div className="flex flex-col justify-center gap-4 pt-4 sm:flex-row">
-              <Link href="/projects">
-                <Button size="lg" className="h-12 px-8 text-base">
-                  Start building <ArrowRight className="h-5 w-5" />
-                </Button>
-              </Link>
-              <Link href="/projects">
-                <Button size="lg" variant="outline" className="h-12 px-8 text-base">
-                  Browse projects <ChevronRight className="h-5 w-5" />
-                </Button>
-              </Link>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-6 pt-6 text-sm font-semibold text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-primary" />
-                <span>Public by default</span>
+            <AnimateIn direction="up" delay={0.1}>
+              <div className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-white px-4 py-2 text-sm font-semibold text-foreground shadow-sm">
+                <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+                Student project collaboration
               </div>
-              <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-primary" />
-                <span>Real-time collaboration</span>
+            </AnimateIn>
+
+            <AnimateIn direction="up" delay={0.2}>
+              <h1 className="text-5xl font-extrabold leading-[1.05] tracking-tight text-foreground sm:text-6xl md:text-7xl">
+                Find your next <br className="hidden md:block" />
+                <span className="text-gradient">co-founder</span>
+                <br />
+                or teammate
+              </h1>
+            </AnimateIn>
+
+            <AnimateIn direction="up" delay={0.3}>
+              <p className="mx-auto max-w-3xl text-lg leading-8 text-muted-foreground md:text-xl">
+                Post project ideas, recruit matching teammates, and collaborate with full transparency.
+                Built for the fastest shipping students, hackers, and builders.
+              </p>
+            </AnimateIn>
+
+            <AnimateIn direction="up" delay={0.4}>
+              <div className="flex flex-col justify-center gap-4 pt-4 sm:flex-row">
+                <Link href="/projects">
+                  <Button size="lg" className="h-12 px-8 text-base">
+                    Start building <ArrowRight className="h-5 w-5" />
+                  </Button>
+                </Link>
+                <Link href="/projects">
+                  <Button size="lg" variant="outline" className="h-12 px-8 text-base">
+                    Browse projects <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </Link>
               </div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <span>AI-assisted matching</span>
+            </AnimateIn>
+
+            <AnimateIn direction="up" delay={0.5}>
+              <div className="flex flex-wrap items-center justify-center gap-6 pt-6 text-sm font-semibold text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" />
+                  <span>Public by default</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-primary" />
+                  <span>Real-time collaboration</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  <span>AI-assisted matching</span>
+                </div>
               </div>
-            </div>
+            </AnimateIn>
           </div>
         </section>
 
@@ -137,30 +186,87 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Trending Projects */}
+        <section className="bg-muted/30 px-4 py-20 md:py-24 border-b overflow-hidden">
+          <div className="max-w-5xl mx-auto">
+            <AnimateIn direction="up">
+              <div className="flex items-center justify-between mb-12">
+                <div>
+                  <h2 className="text-3xl font-bold text-foreground md:text-4xl">Trending Projects</h2>
+                  <p className="text-muted-foreground mt-2 text-lg">Join these teams before they fill up</p>
+                </div>
+                <Link href="/projects" className="hidden sm:flex text-primary font-medium items-center gap-1 hover:underline">
+                  View all <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </AnimateIn>
+            
+            <div className="grid md:grid-cols-3 gap-6">
+              {trendingProjects.map((p: any, i: number) => (
+                <AnimateIn key={p._id.toString()} delay={i * 0.1} direction="up" className="h-full">
+                  <Link href={`/projects/${p._id}`} className="group block h-full">
+                  <div className="rounded-xl border bg-card p-6 h-full transition-all hover:border-primary/50 hover:shadow-md flex flex-col">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="inline-flex items-center justify-center rounded-lg bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                        {p.domain}
+                      </div>
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Users className="h-3.5 w-3.5" /> {p.teamSizeMax} max
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors line-clamp-1">{p.title}</h3>
+                    <p className="text-muted-foreground text-sm line-clamp-3 mb-4 flex-1">{p.description}</p>
+                    <div className="flex items-center gap-2 pt-4 border-t mt-auto">
+                      <div className="h-6 w-6 rounded-full bg-accent text-xs flex items-center justify-center overflow-hidden">
+                        {p.ownerId?.avatar ? (
+                          <img src={p.ownerId.avatar} alt={p.ownerId.name} className="h-full w-full object-cover" />
+                        ) : (
+                          p.ownerId?.name?.[0] || "?"
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground truncate">by {p.ownerId?.name || "Unknown"}</span>
+                    </div>
+                  </div>
+                  </Link>
+                </AnimateIn>
+              ))}
+            </div>
+            <div className="mt-8 text-center sm:hidden">
+              <Link href="/projects">
+                <Button variant="outline" className="w-full">View all projects</Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* How It Works */}
         <section id="how-it-works" className="px-4 py-20 md:py-24">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="mb-4 text-3xl font-bold text-foreground md:text-4xl">How it works</h2>
-              <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-                Three simple steps to find your team and start building
-              </p>
-            </div>
+            <AnimateIn direction="up">
+              <div className="text-center mb-16">
+                <h2 className="mb-4 text-3xl font-bold text-foreground md:text-4xl">How it works</h2>
+                <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+                  Three simple steps to find your team and start building
+                </p>
+              </div>
+            </AnimateIn>
 
             <div className="grid md:grid-cols-3 gap-8">
               {steps.map((step, i) => (
-                <div key={step.number} className="relative">
-                  {i < steps.length - 1 && (
-                    <div className="hidden md:block absolute top-10 left-[calc(50%+60px)] right-[calc(-50%+60px)] h-px bg-border" />
-                  )}
-                  <div className="relative text-center space-y-4">
-                    <div className="inline-flex h-20 w-20 items-center justify-center rounded-xl bg-accent text-2xl font-bold text-primary">
-                      {step.number}
+                <AnimateIn key={step.number} delay={i * 0.15} direction="up">
+                  <div className="relative">
+                    {i < steps.length - 1 && (
+                      <div className="hidden md:block absolute top-10 left-[calc(50%+60px)] right-[calc(-50%+60px)] h-px bg-border" />
+                    )}
+                    <div className="relative text-center space-y-4">
+                      <div className="inline-flex h-20 w-20 items-center justify-center rounded-xl bg-accent text-2xl font-bold text-primary">
+                        {step.number}
+                      </div>
+                      <h3 className="text-xl font-semibold">{step.title}</h3>
+                      <p className="text-muted-foreground leading-relaxed">{step.description}</p>
                     </div>
-                    <h3 className="text-xl font-semibold">{step.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">{step.description}</p>
                   </div>
-                </div>
+                </AnimateIn>
               ))}
             </div>
           </div>
@@ -169,52 +275,70 @@ export default function HomePage() {
         {/* Features Grid */}
         <section id="features" className="bg-muted px-4 py-20 md:py-24">
           <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="mb-4 text-3xl font-bold text-foreground md:text-4xl">Everything you need</h2>
-              <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-                All-in-one workspace for project collaboration
-              </p>
-            </div>
+            <AnimateIn direction="up">
+              <div className="text-center mb-16">
+                <h2 className="mb-4 text-3xl font-bold text-foreground md:text-4xl">Everything you need</h2>
+                <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+                  All-in-one workspace for project collaboration
+                </p>
+              </div>
+            </AnimateIn>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {features.map((feature) => {
+              {features.map((feature, i) => {
                 const Icon = feature.icon;
                 return (
-                  <div
-                    key={feature.title}
-                    className="group rounded-xl border bg-card p-6 shadow-sm transition-all duration-200 hover:border-primary/40 hover:shadow-md"
-                  >
-                    <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-accent text-primary transition-transform group-hover:scale-105">
-                      <Icon className="h-6 w-6" />
+                  <AnimateIn key={feature.title} delay={i * 0.1} direction="up" className="h-full">
+                    <div className="group rounded-xl border bg-card p-6 shadow-sm transition-all duration-200 hover:border-primary/40 hover:shadow-md h-full">
+                      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-accent text-primary transition-transform group-hover:scale-105">
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
                     </div>
-                    <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
-                  </div>
+                  </AnimateIn>
                 );
               })}
             </div>
           </div>
         </section>
 
-        {/* Testimonial */}
-        <section className="px-4 py-20 md:py-24">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="flex items-center justify-center gap-1 mb-6">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Star key={i} className="h-5 w-5 fill-primary text-primary" />
+        {/* Testimonials */}
+        <section className="bg-muted/30 px-4 py-20 md:py-24 border-b">
+          <div className="max-w-5xl mx-auto">
+            <AnimateIn direction="up">
+              <div className="text-center mb-16">
+                <h2 className="mb-4 text-3xl font-bold text-foreground md:text-4xl">Loved by builders</h2>
+                <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+                  See what our community of students and hackers is saying.
+                </p>
+              </div>
+            </AnimateIn>
+            
+            <div className="grid md:grid-cols-3 gap-6">
+              {testimonials.map((t, i) => (
+                <AnimateIn key={i} delay={i * 0.1} direction="up" className="h-full">
+                  <div className="rounded-xl border bg-card p-8 shadow-sm flex flex-col h-full hover:border-primary/50 transition-colors">
+                    <div className="flex gap-1 mb-6">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star key={star} className="h-4 w-4 fill-primary text-primary" />
+                      ))}
+                    </div>
+                    <blockquote className="text-lg leading-relaxed mb-8 flex-1 text-foreground/90">
+                      &ldquo;{t.quote}&rdquo;
+                    </blockquote>
+                    <div className="flex items-center gap-4 mt-auto pt-4 border-t">
+                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-lg">
+                        {t.avatar}
+                      </div>
+                      <div className="text-left">
+                        <div className="font-semibold">{t.author}</div>
+                        <div className="text-sm text-muted-foreground">{t.role}</div>
+                      </div>
+                    </div>
+                  </div>
+                </AnimateIn>
               ))}
-            </div>
-            <blockquote className="text-xl md:text-2xl font-medium leading-relaxed mb-6">
-              &ldquo;Found my co-founder on CollabSpace in just 3 days. Seeing active projects made the search feel direct and honest.&rdquo;
-            </blockquote>
-            <div className="flex items-center justify-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-semibold text-primary">
-                S
-              </div>
-              <div className="text-left">
-                <div className="font-medium text-sm">Sarah Chen</div>
-                <div className="text-xs text-muted-foreground">Built a SaaS project from CollabSpace</div>
-              </div>
             </div>
           </div>
         </section>

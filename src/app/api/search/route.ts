@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { connectDB } from "@/lib/mongoose";
+import { Project } from "@/lib/models";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -8,46 +9,27 @@ export async function GET(req: NextRequest) {
   const status = searchParams.get("status");
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "20");
-
-  if (!query) {
-    return NextResponse.json({ results: [] });
-  }
-
-  const where: any = {
-    status: { notIn: ["CANCELLED", "COMPLETED"] },
+  if (!query) return NextResponse.json({ results: [] });
+  await connectDB();
+  const filter: any = {
+    status: { $nin: ["CANCELLED", "COMPLETED"] },
     isPrivate: false,
+    $or: [
+      { title: { $regex: query, $options: "i" } },
+      { description: { $regex: query, $options: "i" } },
+      { problemStatement: { $regex: query, $options: "i" } },
+      { requiredSkills: query },
+    ],
   };
-
-  if (domain) where.domain = domain;
-  if (status) where.status = status;
-
-  where.OR = [
-    { title: { contains: query, mode: "insensitive" } },
-    { description: { contains: query, mode: "insensitive" } },
-    { problemStatement: { contains: query, mode: "insensitive" } },
-    { requiredSkills: { hasSome: [query] } },
-  ];
-
+  if (domain) filter.domain = domain;
+  if (status) filter.status = status;
   const [projects, total] = await Promise.all([
-    prisma.project.findMany({
-      where,
-      include: {
-        owner: { select: { name: true, avatar: true } },
-        team: { select: { id: true } },
-        messages: { orderBy: { createdAt: "desc" }, take: 1, select: { createdAt: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.project.count({ where }),
+    Project.find(filter).populate("ownerId", "name avatar").sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    Project.countDocuments(filter),
   ]);
-
-  return NextResponse.json({
-    results: projects,
-    total,
-    page,
-    limit,
-    totalPages: Math.ceil(total / limit),
-  });
+  const results = (projects as any[]).map((p) => ({
+    ...p, id: p._id.toString(),
+    owner: p.ownerId ? { name: (p.ownerId as any).name, avatar: (p.ownerId as any).avatar } : null,
+  }));
+  return NextResponse.json({ results, total, page, limit, totalPages: Math.ceil(total / limit) });
 }

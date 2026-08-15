@@ -1,71 +1,47 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { connectDB } from "@/lib/mongoose";
+import { User, Project } from "@/lib/models";
 
-type ProjectRouteContext = {
-  params: Promise<{ id: string }>;
-};
+type Ctx = { params: Promise<{ id: string }> };
 
-export async function PUT(req: Request, { params }: ProjectRouteContext) {
+export async function PUT(req: Request, { params }: Ctx) {
   const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  await connectDB();
+  const user = await User.findOne({ email: session.user.email });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-
-  const { id: projectId } = await params;
-  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  const { id } = await params;
+  const project = await Project.findById(id);
   if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
-
-  const isOwner = project.ownerId === user.id;
-  if (!isOwner) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
-
-  const body = await req.json();
-  const {
-    title,
-    description,
-    problemStatement,
-    domain,
-    teamSizeMax,
-    requiredSkills,
-    deadline,
-    isPrivate,
-  } = body;
-
-  const updated = await prisma.project.update({
-    where: { id: projectId },
-    data: {
-      title: title?.trim() || project.title,
-      description: description?.trim() || project.description,
-      problemStatement: problemStatement?.trim() || project.problemStatement,
-      domain: domain?.trim() || project.domain,
-      teamSizeMax: teamSizeMax || project.teamSizeMax,
-      requiredSkills: requiredSkills || project.requiredSkills,
-      deadline: deadline || project.deadline,
-      isPrivate: isPrivate !== undefined ? isPrivate : project.isPrivate,
-    },
-  });
-
-  return NextResponse.json(updated);
+  if (project.ownerId.toString() !== user._id.toString()) {
+    return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+  }
+  const { title, description, problemStatement, domain, teamSizeMax, requiredSkills, deadline, isPrivate } = await req.json();
+  if (title) project.title = title.trim();
+  if (description) project.description = description.trim();
+  if (problemStatement) project.problemStatement = problemStatement.trim();
+  if (domain) project.domain = domain.trim();
+  if (teamSizeMax) project.teamSizeMax = teamSizeMax;
+  if (requiredSkills) project.requiredSkills = requiredSkills;
+  if (deadline !== undefined) project.deadline = deadline ? new Date(deadline) : undefined;
+  if (isPrivate !== undefined) project.isPrivate = isPrivate;
+  await project.save();
+  return NextResponse.json({ ...project.toObject(), id: project._id.toString() });
 }
 
-export async function DELETE(req: Request, { params }: ProjectRouteContext) {
+export async function DELETE(req: Request, { params }: Ctx) {
   const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  await connectDB();
+  const user = await User.findOne({ email: session.user.email });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-
-  const { id: projectId } = await params;
-  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  const { id } = await params;
+  const project = await Project.findById(id);
   if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
-
-  const isOwner = project.ownerId === user.id;
-  if (!isOwner) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
-
-  await prisma.project.delete({ where: { id: projectId } });
-
+  if (project.ownerId.toString() !== user._id.toString()) {
+    return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+  }
+  await Project.findByIdAndDelete(id);
   return NextResponse.json({ success: true });
 }

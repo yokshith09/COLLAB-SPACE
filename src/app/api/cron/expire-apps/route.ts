@@ -1,41 +1,44 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { connectDB } from "@/lib/mongoose";
+import { Application, Notification, Project } from "@/lib/models";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function GET() {
   try {
-    const result = await prisma.application.updateMany({
-      where: { status: "PENDING", expiresAt: { lte: new Date() } },
-      data: { status: "EXPIRED" },
-    });
+    await connectDB();
+    const now = new Date();
 
-    const apps = await prisma.application.findMany({
-      where: { status: "EXPIRED", expiresAt: { lte: new Date() } },
-      select: { userId: true, projectId: true },
-    });
+    const expiredApps = await Application.find({
+      status: "PENDING",
+      expiresAt: { $lte: now },
+    }).select("_id userId projectId");
+
+    if (expiredApps.length === 0) {
+      return NextResponse.json({ expired: 0, notified: 0 });
+    }
+
+    const result = await Application.updateMany(
+      { _id: { $in: expiredApps.map(a => a._id) } },
+      { $set: { status: "EXPIRED" } }
+    );
 
     let notified = 0;
-    for (const app of apps) {
-      const project = await prisma.project.findUnique({
-        where: { id: app.projectId },
-        select: { title: true },
-      });
+    for (const app of expiredApps) {
+      const project = await Project.findById(app.projectId).select("title");
       if (project) {
-        await prisma.notification.create({
-          data: {
-            userId: app.userId,
-            type: "application_expired",
-            message: `Your application to "${project.title}" expired (no response in 7 days)`,
-            link: `/projects/${app.projectId}`,
-          },
+        await Notification.create({
+          userId: app.userId,
+          type: "application_expired",
+          message: `Your application to "${project.title}" expired (no response in 14 days)`,
+          link: `/projects/${app.projectId}`,
         });
         notified++;
       }
     }
 
-    return NextResponse.json({ expired: result.count, notified });
+    return NextResponse.json({ expired: result.modifiedCount, notified });
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to expire applications", detail: (error as Error).message },

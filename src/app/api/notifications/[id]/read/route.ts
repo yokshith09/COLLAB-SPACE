@@ -1,17 +1,13 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { connectDB } from "@/lib/mongoose";
+import { Notification } from "@/lib/models";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  await prisma.notification.update({
-    where: { id },
-    data: { isRead: true },
-  });
-
+  if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  await connectDB();
+  await Notification.findByIdAndUpdate(id, { isRead: true });
   return NextResponse.json({ success: true });
 }

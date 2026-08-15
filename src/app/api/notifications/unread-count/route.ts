@@ -1,19 +1,14 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { connectDB } from "@/lib/mongoose";
+import { User, Notification } from "@/lib/models";
 
 export async function GET() {
   const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return NextResponse.json({ count: 0 });
-
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!session?.user?.email) return NextResponse.json({ count: 0 });
+  await connectDB();
+  const user = await User.findOne({ email: session.user.email });
   if (!user) return NextResponse.json({ count: 0 });
-
-  const count = await prisma.notification.count({
-    where: { userId: user.id, isRead: false },
-  });
-
+  const count = await Notification.countDocuments({ userId: user._id, isRead: false });
   return NextResponse.json({ count });
 }
-

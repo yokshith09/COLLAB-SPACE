@@ -9,11 +9,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { FileUpload } from "@/components/shared/file-upload";
 import { getHealthStatus, daysLeft, timeAgo } from "@/lib/utils";
 import { applyToProject } from "@/actions/project";
-import { respondToApplication } from "@/actions/application";
+import { respondToApplication, sendApplicationMessage } from "@/actions/application";
+import { updateProjectShowcase } from "@/actions/project";
 import Link from "next/link";
-import { Users, Calendar, Clock, MessageSquare, ExternalLink } from "lucide-react";
+import { Users, Calendar, Clock, MessageSquare, ExternalLink, Share2, Code, LayoutTemplate, Pencil, Sparkles } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface ProjectDetailProps {
   project: any;
@@ -22,16 +27,56 @@ interface ProjectDetailProps {
   userApplication: any;
   allApplications: any[];
   currentUser: any;
+  recommendedUsers?: any[];
 }
 
-export function ProjectDetail({ project, isOwner, isMember, userApplication, allApplications, currentUser }: ProjectDetailProps) {
+export function ProjectDetail({ project, isOwner, isMember, userApplication, allApplications, currentUser, recommendedUsers = [] }: ProjectDetailProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [applyOpen, setApplyOpen] = useState(false);
   const [applyMessage, setApplyMessage] = useState("");
+  const [roleRequested, setRoleRequested] = useState("");
+  const [availability, setAvailability] = useState("");
+  const [resumePreview, setResumePreview] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
+  const [msgContent, setMsgContent] = useState<Record<string, string>>({});
+  const [sendingMsg, setSendingMsg] = useState<Record<string, boolean>>({});
+
+  const [showcaseOpen, setShowcaseOpen] = useState(false);
+  const [githubUrl, setGithubUrl] = useState(project.githubUrl || "");
+  const [demoUrl, setDemoUrl] = useState(project.demoUrl || "");
+  const [updatingShowcase, setUpdatingShowcase] = useState(false);
 
   const health = getHealthStatus(project.owner.lastLoginAt);
+
+  async function handleUpdateShowcase() {
+    setUpdatingShowcase(true);
+    const res = await updateProjectShowcase(project.id, { githubUrl, demoUrl });
+    setUpdatingShowcase(false);
+    if (res.error) {
+      toast({ title: "Error", description: res.error, variant: "destructive" });
+    } else {
+      toast({ title: "Showcase updated!" });
+      setShowcaseOpen(false);
+      router.refresh();
+    }
+  }
+
+  async function handleSendMsg(appId: string) {
+    const content = msgContent[appId];
+    if (!content?.trim()) return;
+
+    setSendingMsg((prev) => ({ ...prev, [appId]: true }));
+    const result = await sendApplicationMessage(appId, content);
+    setSendingMsg((prev) => ({ ...prev, [appId]: false }));
+
+    if (result.error) {
+      toast({ title: "Error", description: result.error, variant: "destructive" });
+    } else {
+      setMsgContent((prev) => ({ ...prev, [appId]: "" }));
+      router.refresh();
+    }
+  }
 
   const statusStyles: Record<string, string> = {
     OPEN: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
@@ -48,7 +93,7 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
     if (!applyMessage.trim()) { toast({ title: "Please write a message", variant: "destructive" }); return; }
 
     setApplying(true);
-    const result = await applyToProject(project.id, applyMessage);
+    const result = await applyToProject(project.id, applyMessage, roleRequested, availability, resumePreview || undefined);
     setApplying(false);
 
     if (result.error) {
@@ -97,17 +142,84 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
           </div>
         </div>
 
-          <div className="flex flex-wrap gap-2 shrink-0">
+        <div className="flex flex-wrap gap-2 shrink-0">
+          {project.status === "COMPLETED" && isOwner && (
+            <Dialog open={showcaseOpen} onOpenChange={setShowcaseOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="gap-1.5 border-primary text-primary hover:bg-primary/10">
+                  <Pencil className="h-4 w-4" /> Edit Showcase
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit Project Showcase</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>GitHub URL</Label>
+                    <Input placeholder="https://github.com/..." value={githubUrl} onChange={(e) => setGithubUrl(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Live Demo URL</Label>
+                    <Input placeholder="https://..." value={demoUrl} onChange={(e) => setDemoUrl(e.target.value)} />
+                  </div>
+                  <Button onClick={handleUpdateShowcase} disabled={updatingShowcase} className="w-full">
+                    {updatingShowcase ? "Saving..." : "Save Showcase"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+          <Button
+            variant="outline"
+              className="gap-1.5"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast({ title: "Link copied to clipboard!" });
+                }
+              }}
+            >
+              <Share2 className="h-4 w-4" /> Share
+            </Button>
             {canApply && (
-              <Dialog open={applyOpen} onOpenChange={setApplyOpen}>
-                <DialogTrigger asChild>
-                  <Button>Apply to Join</Button>
-                </DialogTrigger>
-                <DialogContent>
+              !currentUser ? (
+                <Button onClick={() => router.push("/sign-in")}>Apply to Join</Button>
+              ) : (
+                <Dialog open={applyOpen} onOpenChange={setApplyOpen}>
+                  <DialogTrigger asChild>
+                    <Button>Apply to Join</Button>
+                  </DialogTrigger>
+                  <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Apply to {project.title}</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
+                    <div className="flex gap-2">
+                      <input type="text" placeholder="Role (e.g. Frontend Dev)" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={roleRequested} onChange={(e) => setRoleRequested(e.target.value)} />
+                      <input type="text" placeholder="Availability (e.g. 10 hrs/wk)" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={availability} onChange={(e) => setAvailability(e.target.value)} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs">Optional Resume</Label>
+                      {resumePreview ? (
+                        <div className="flex items-center gap-2">
+                          <Button type="button" variant="outline" size="sm" asChild>
+                            <a href={resumePreview} target="_blank" rel="noopener noreferrer">View attached</a>
+                          </Button>
+                          <Button type="button" variant="destructive" size="sm" onClick={() => setResumePreview(null)}>Remove</Button>
+                        </div>
+                      ) : (
+                        <div className="flex-1">
+                          <FileUpload
+                            projectId="temp"
+                            onUploadComplete={(url) => { setResumePreview(url); toast({ title: "Resume attached" }); }}
+                            accept=".pdf,.doc,.docx,image/*"
+                            maxSize={2 * 1024 * 1024}
+                            buttonText="Upload Resume"
+                          />
+                        </div>
+                      )}
+                    </div>
                     <Textarea
                       placeholder="Tell the admin about your relevant experience and why you're a good fit..."
                       value={applyMessage}
@@ -115,14 +227,15 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
                       rows={4}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Applications expire in 7 days if not reviewed. Max 5 applications per day.
+                      Applications expire in 14 days if not reviewed. Max 5 applications per day.
                     </p>
                     <Button onClick={handleApply} disabled={applying} className="w-full">
                       {applying ? "Submitting..." : "Submit Application"}
                     </Button>
                   </div>
                 </DialogContent>
-              </Dialog>
+                </Dialog>
+              )
             )}
 
             {isMember && (
@@ -134,7 +247,8 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
             )}
 
             {isOwner && (
-              <Link href={`/projects/${project.id}/settings`}>                <Button variant="outline" className="gap-1.5">
+              <Link href={`/projects/${project.id}/settings`}>
+                <Button variant="outline" className="gap-1.5">
                   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 15a4 4 0 100-8 4 4 0 000 8z" />
                     <path d="M12 15v2m-6-4h12m-6-8v2m-6 4h12" />
@@ -147,13 +261,71 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
       </div>
 
       {userApplication && !isMember && (
-        <div className="p-4 rounded-xl border bg-muted/30">
-          <p className="text-sm font-medium">
-            Your application: <span className="text-primary">{userApplication.status}</span>
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Expires {daysLeft(userApplication.expiresAt)}
-          </p>
+        <div className="p-4 rounded-xl border bg-muted/30 space-y-4">
+          <div>
+            <p className="text-sm font-medium">
+              Your application: <span className="text-primary">{userApplication.status}</span>
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Expires {daysLeft(userApplication.expiresAt)}
+            </p>
+          </div>
+
+          <div className="space-y-3 pt-3 border-t">
+            <h4 className="text-sm font-semibold">Messages</h4>
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {userApplication.messages?.map((m: any, i: number) => (
+                <div key={i} className={`p-2 rounded-lg text-sm ${m.senderId === currentUser?.id ? 'bg-primary/10 ml-8' : 'bg-muted mr-8'}`}>
+                  <p>{m.content}</p>
+                </div>
+              ))}
+              {!userApplication.messages?.length && <p className="text-xs text-muted-foreground">No messages yet.</p>}
+            </div>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Message admin..."
+                value={msgContent[userApplication.id] || ""}
+                onChange={(e) => setMsgContent({ ...msgContent, [userApplication.id]: e.target.value })}
+                className="h-8 text-sm"
+              />
+              <Button size="sm" onClick={() => handleSendMsg(userApplication.id)} disabled={sendingMsg[userApplication.id]}>
+                Send
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {project.status === "COMPLETED" && (project.githubUrl || project.demoUrl || project.gallery?.length > 0) && (
+        <div className="p-6 rounded-xl border bg-card relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -z-10" />
+          <h2 className="text-lg font-semibold flex items-center gap-2 mb-4">
+            <LayoutTemplate className="h-5 w-5 text-primary" />
+            Project Showcase
+          </h2>
+          <div className="flex flex-wrap gap-4">
+            {project.githubUrl && (
+              <Button asChild variant="outline" className="gap-2">
+                <a href={project.githubUrl} target="_blank" rel="noopener noreferrer">
+                  <Code className="h-4 w-4" /> Source Code
+                </a>
+              </Button>
+            )}
+            {project.demoUrl && (
+              <Button asChild className="gap-2">
+                <a href={project.demoUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4" /> Live Demo
+                </a>
+              </Button>
+            )}
+          </div>
+          {project.gallery && project.gallery.length > 0 && (
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {project.gallery.map((img: string, idx: number) => (
+                <img key={idx} src={img} alt="Showcase" className="w-full aspect-video object-cover rounded-lg border" />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -161,12 +333,16 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
         <div className="space-y-6">
           <section className="space-y-2">
             <h2 className="font-semibold">Description</h2>
-            <p className="text-muted-foreground leading-relaxed">{project.description}</p>
+            <div className="text-muted-foreground leading-relaxed [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_a]:text-primary [&_a]:underline [&_h1]:text-xl [&_h1]:font-bold [&_h2]:text-lg [&_h2]:font-bold [&_p]:mb-2 [&_h3]:font-semibold space-y-1">
+              <ReactMarkdown>{project.description}</ReactMarkdown>
+            </div>
           </section>
 
           <section className="space-y-2">
             <h2 className="font-semibold">Problem Statement</h2>
-            <p className="text-muted-foreground leading-relaxed">{project.problemStatement}</p>
+            <div className="text-muted-foreground leading-relaxed [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_a]:text-primary [&_a]:underline [&_h1]:text-xl [&_h1]:font-bold [&_h2]:text-lg [&_h2]:font-bold [&_p]:mb-2 [&_h3]:font-semibold space-y-1">
+              <ReactMarkdown>{project.problemStatement}</ReactMarkdown>
+            </div>
           </section>
 
           {project.requiredSkills?.length > 0 && (
@@ -208,6 +384,21 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
                   {app.message && (
                     <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">{app.message}</p>
                   )}
+                  {(app.roleRequested || app.availability) && (
+                    <div className="flex gap-4 text-xs text-muted-foreground">
+                      {app.roleRequested && <p><span className="font-semibold text-foreground">Role:</span> {app.roleRequested}</p>}
+                      {app.availability && <p><span className="font-semibold text-foreground">Availability:</span> {app.availability}</p>}
+                    </div>
+                  )}
+                  {app.resumeUrl && (
+                    <div className="pt-1">
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={app.resumeUrl} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-3 w-3 mr-2" /> View Resume
+                        </a>
+                      </Button>
+                    </div>
+                  )}
                   {app.user.skills?.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {app.user.skills.map((s: any) => (
@@ -221,8 +412,70 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
                       <Button size="sm" variant="outline" onClick={() => handleRespond(app.id, "REJECTED")}>Reject</Button>
                     </div>
                   )}
+
+                  <div className="pt-3 border-t mt-3 space-y-3">
+                    <h4 className="text-sm font-semibold">Chat with Applicant</h4>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {app.messages?.map((m: any, i: number) => (
+                        <div key={i} className={`p-2 rounded-lg text-sm ${m.senderId === currentUser?.id ? 'bg-primary/10 ml-8' : 'bg-muted mr-8'}`}>
+                          <p className="text-xs font-medium mb-1 opacity-70">{m.senderName || (m.senderId === currentUser?.id ? "You" : "Them")}</p>
+                          <p>{m.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Type a message..."
+                        value={msgContent[app.id] || ""}
+                        onChange={(e) => setMsgContent({ ...msgContent, [app.id]: e.target.value })}
+                        className="h-8 text-sm"
+                      />
+                      <Button size="sm" onClick={() => handleSendMsg(app.id)} disabled={sendingMsg[app.id]}>
+                        Send
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               ))}
+            </section>
+          )}
+          
+          {isOwner && recommendedUsers && recommendedUsers.length > 0 && (
+            <section className="space-y-3 mt-8">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <h2 className="font-semibold text-lg">AI Recommended Candidates</h2>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">Users who match this project's required skills.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {recommendedUsers.map((user: any) => (
+                  <div key={user.id} className="p-4 rounded-xl border bg-primary/5 hover:bg-primary/10 transition-colors flex items-start gap-3 relative overflow-hidden">
+                    {user.matchScore && (
+                      <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-1 rounded-bl-lg flex items-center gap-1 shadow-sm">
+                        <Sparkles className="w-3 h-3" /> {user.matchScore} Match
+                      </div>
+                    )}
+                    <Avatar className="h-10 w-10 border shadow-sm">
+                      <AvatarImage src={user.avatar || ""} />
+                      <AvatarFallback className="bg-background text-primary">{user.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0 pr-8">
+                      <Link href={`/profile/${user.id}`} className="font-semibold text-sm hover:underline hover:text-primary transition-colors">
+                        {user.name}
+                      </Link>
+                      {user.bio && <p className="text-xs text-muted-foreground truncate mt-0.5">{user.bio}</p>}
+                      {user.skills && user.skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {user.skills.slice(0, 3).map((s: string) => (
+                            <Badge key={s} variant="secondary" className="text-[9px] h-4 px-1.5">{s}</Badge>
+                          ))}
+                          {user.skills.length > 3 && <span className="text-[10px] text-muted-foreground pl-1">+{user.skills.length - 3}</span>}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </section>
           )}
         </div>

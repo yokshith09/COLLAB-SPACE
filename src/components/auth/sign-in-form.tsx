@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { authenticate } from "@/actions/auth";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,26 +39,18 @@ export function SignInForm() {
     }
 
     try {
-      const res = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (res?.error || res?.ok === false) {
-        console.error("SIGN_IN_ERROR", res);
-        setError(
-          res?.error === "CredentialsSignin"
-            ? "The email or password does not match an account."
-            : "Authentication service failed. Check DATABASE_URL, AUTH_SECRET, and the Vercel function logs."
-        );
-      } else {
-        router.push(getSafeCallbackUrl());
-        router.refresh();
+      const res = await authenticate(email, password, getSafeCallbackUrl());
+      if (res?.error) {
+        setError(res.error);
       }
+      // If successful, the action will throw a redirect error which Next.js catches
+      // and redirects the user, so we don't need a success block here unless it throws something else.
     } catch (error) {
       console.error("SIGN_IN_EXCEPTION", error);
-      setError("Sign in failed. Check DATABASE_URL, AUTH_SECRET, and the Vercel function logs.");
+      // Only set error if it's not a Next.js redirect
+      if (!(error as any).message?.includes("NEXT_REDIRECT")) {
+        setError("Sign in failed. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }

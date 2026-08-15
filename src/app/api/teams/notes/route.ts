@@ -1,27 +1,21 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { connectDB } from "@/lib/mongoose";
+import { User, TeamMember, Note } from "@/lib/models";
 
 export async function POST(req: Request) {
   const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  await connectDB();
+  const user = await User.findOne({ email: session.user.email });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-
   const { projectId, title, content } = await req.json();
-
-  const membership = await prisma.teamMember.findUnique({
-    where: { userId_projectId: { userId: user.id, projectId } },
-  });
+  const membership = await TeamMember.findOne({ userId: user._id, projectId });
   if (!membership) return NextResponse.json({ error: "Not a team member" }, { status: 403 });
-
-  const note = await prisma.note.create({
-    data: { title, content, projectId, createdBy: user.id },
-    include: { author: { select: { id: true, name: true } } },
-  });
-
-  return NextResponse.json(note, { status: 201 });
+  const note = await Note.create({ title, content, projectId, createdBy: user._id });
+  return NextResponse.json({
+    ...note.toObject(),
+    id: note._id.toString(),
+    author: { id: user._id.toString(), name: user.name },
+  }, { status: 201 });
 }
-

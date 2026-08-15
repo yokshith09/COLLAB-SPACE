@@ -1,7 +1,8 @@
 "use server";
 
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { connectDB } from "@/lib/mongoose";
+import { User, Project, Application, TeamMember, Notification, type IProject, type IUser } from "@/lib/models";
 import { revalidatePath } from "next/cache";
 
 export async function respondToApplication(applicationId: string, status: "ACCEPTED" | "REJECTED") {
@@ -9,72 +10,81 @@ export async function respondToApplication(applicationId: string, status: "ACCEP
   const userId = session?.user?.id;
   if (!userId) return { error: "Unauthorized" };
 
-  const app = await prisma.application.findUnique({
-    where: { id: applicationId },
-    include: { project: true, user: true },
-  });
+  await connectDB();
 
+  const app = await Application.findById(applicationId)
+    .populate<{ projectId: IProject }>("projectId")
+    .populate<{ userId: IUser }>("userId");
   if (!app) return { error: "Application not found" };
 
-  const owner = await prisma.user.findUnique({ where: { id: userId } });
-  if (!owner || app.project.ownerId !== owner.id) return { error: "Not authorized" };
-
+  const owner = await User.findOne({ email: session?.user?.email });
+  if (!owner || app.projectId.ownerId.toString() !== owner._id.toString()) {
+    return { error: "Not authorized" };
+  }
   if (app.status !== "PENDING") return { error: "Application already processed" };
 
-  await prisma.application.update({
-    where: { id: applicationId },
-    data: { status },
-  });
+  app.status = status;
+  await app.save();
 
   if (status === "ACCEPTED") {
-    const existingMember = await prisma.teamMember.findUnique({
-      where: { userId_projectId: { userId: app.userId, projectId: app.projectId } },
+    const existingMember = await TeamMember.findOne({
+      userId: app.userId._id,
+      projectId: app.projectId._id,
     });
-
     if (!existingMember) {
-      await prisma.teamMember.create({
-        data: { userId: app.userId, projectId: app.projectId, role: "member" },
+      await TeamMember.create({
+        userId: app.userId._id,
+        projectId: app.projectId._id,
+        role: "member",
       });
     }
-
-    const teamCount = await prisma.teamMember.count({ where: { projectId: app.projectId } });
-    if (teamCount >= app.project.teamSizeMax) {
-      await prisma.project.update({
-        where: { id: app.projectId },
-        data: { status: "FULL" },
-      });
-    }
+    const teamCount = await TeamMember.countDocuments({ projectId: app.projectId._id });
+    if (teamCount >= app.projectId.teamSizeMax) {
+      await Project.findByIdAndUpdate(app.projectId._id, { status: "FULL" });
     }
 
-    // Send email notification
-    try {
-      await fetch("/api/email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to: app.user.email,
-          subject: `Your application to "${app.project.title}" was ${status.toLowerCase()}`,          html: `
-            <h2>Your application status has been updated</h2>
-            <p>Your application to <strong>${app.project.title}</strong> was <strong>${status.toLowerCase()}</strong>.</p>
-            <p>Project: ${app.project.title}</p>
-            <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/projects/${app.projectId}">View Project</a></p>
-          `,
-        }),
-      });
-    } catch {
-      // Silently fail if email sending fails
-    }
+    const { awardPoints, ACTION_POINTS } = await import("@/lib/gamification");
+    await awardPoints(app.userId._id.toString(), ACTION_POINTS.APPLICATION_ACCEPTED);
+  }
 
-    await prisma.notification.create({
-      data: {
-        userId: app.userId,
-        type: `application_${status.toLowerCase()}`,
-        message: `Your application to "${app.project.title}" was ${status.toLowerCase()}`,
-        link: `/projects/${app.projectId}`,
-      },
-    });
+  await Notification.create({
+    userId: app.userId._id,
+    type: `application_${status.toLowerCase()}`,
+    message: `Your application to "${app.projectId.title}" was ${status.toLowerCase()}`,
+    link: `/projects/${app.projectId._id}`,
+  });
 
-    revalidatePath(`/projects/${app.projectId}`);
-    return { success: true };
+  revalidatePath(`/projects/${app.projectId._id}`);
+  return { success: true };
 }
 
+export async function sendApplicationMessage(applicationId: string, content: string) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return { error: "Unauthorized" };
+  if (!content?.trim()) return { error: "Message cannot be empty" };
+
+  await connectDB();
+  const user = await User.findOne({ email: session.user.email });
+  if (!user) return { error: "User not found" };
+
+  const app = await Application.findById(applicationId).populate<{ projectId: IProject }>("projectId");
+  if (!app) return { error: "Application not found" };
+
+  const isOwner = app.projectId.ownerId.toString() === user._id.toString();
+  const isApplicant = app.userId.toString() === user._id.toString();
+
+  if (!isOwner && !isApplicant) {
+    return { error: "Not authorized to message on this application" };
+  }
+
+  app.messages.push({
+    senderId: user._id,
+    content: content.trim(),
+    createdAt: new Date(),
+  });
+
+  await app.save();
+  revalidatePath(`/projects/${app.projectId._id}`);
+  return { success: true };
+}

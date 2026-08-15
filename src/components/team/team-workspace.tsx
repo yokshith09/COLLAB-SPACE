@@ -6,21 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { timeAgo, cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabase-client";
-import { MessageSquare, FileText, CheckSquare, Send, Plus, Trash2, UserX } from "lucide-react";
+import { MessageSquare, FileText, CheckSquare, Send, Plus } from "lucide-react";
 
 export function TeamWorkspace({ project, currentUser }: { project: any; currentUser: any }) {
   const router = useRouter();
   const { toast } = useToast();
-  const [messages, setMessages] = useState(project.messages || []);
+  const [messages, setMessages] = useState<any[]>(project.messages || []);
   const [newMessage, setNewMessage] = useState("");
-  const [notes, setNotes] = useState(project.notes || []);
-  const [tasks, setTasks] = useState(project.tasks || []);
+  const [notes, setNotes] = useState<any[]>(project.notes || []);
+  const [tasks, setTasks] = useState<any[]>(project.tasks || []);
   const [noteOpen, setNoteOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(false);
   const [noteTitle, setNoteTitle] = useState("");
@@ -30,26 +28,21 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
   const [taskAssignee, setTaskAssignee] = useState("");
   const [taskDue, setTaskDue] = useState("");
   const [activeTab, setActiveTab] = useState("chat");
+  const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
   const chatEnd = useRef<HTMLDivElement>(null);
 
-  const isAdmin = currentUser.id === project.owner?.id;
-
+  // Poll for new messages every 4 seconds
   useEffect(() => {
-    const channel = supabase
-      .channel(`project-${project.id}`)
-      .on("postgres_changes",
-        { event: "INSERT", schema: "public", table: "Message", filter: `projectId=eq.${project.id}` },
-        (payload) => {
-          const msg = payload.new as any;
-          setMessages((prev: any[]) => {
-            if (prev.some((m) => m.id === msg.id)) return prev;
-            return [...prev, msg];
-          });
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/teams/messages?projectId=${project.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setMessages(data);
         }
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+      } catch {}
+    }, 4000);
+    return () => clearInterval(interval);
   }, [project.id]);
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
@@ -62,6 +55,8 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
       body: JSON.stringify({ projectId: project.id, content: newMessage }),
     });
     if (res.ok) {
+      const msg = await res.json();
+      setMessages((prev) => [...prev, msg]);
       setNewMessage("");
     } else {
       const data = await res.json();
@@ -78,10 +73,8 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
     });
     if (res.ok) {
       const note = await res.json();
-      setNotes((prev: any[]) => [note, ...prev]);
-      setNoteOpen(false);
-      setNoteTitle("");
-      setNoteContent("");
+      setNotes((prev) => [note, ...prev]);
+      setNoteOpen(false); setNoteTitle(""); setNoteContent("");
       toast({ title: "Note created" });
     }
   }
@@ -91,22 +84,12 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
     const res = await fetch("/api/teams/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        projectId: project.id,
-        title: taskTitle,
-        description: taskDesc || null,
-        assignedTo: taskAssignee || null,
-        dueDate: taskDue || null,
-      }),
+      body: JSON.stringify({ projectId: project.id, title: taskTitle, description: taskDesc || null, assignedTo: taskAssignee || null, dueDate: taskDue || null }),
     });
     if (res.ok) {
       const task = await res.json();
-      setTasks((prev: any[]) => [task, ...prev]);
-      setTaskOpen(false);
-      setTaskTitle("");
-      setTaskDesc("");
-      setTaskAssignee("");
-      setTaskDue("");
+      setTasks((prev) => [task, ...prev]);
+      setTaskOpen(false); setTaskTitle(""); setTaskDesc(""); setTaskAssignee(""); setTaskDue("");
       toast({ title: "Task created" });
     }
   }
@@ -117,9 +100,7 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
-    if (res.ok) {
-      setTasks((prev: any[]) => prev.map((t) => t.id === taskId ? { ...t, status } : t));
-    }
+    if (res.ok) setTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, status } : t));
   }
 
   async function removeMember(userId: string) {
@@ -130,10 +111,7 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ projectId: project.id, removalReason: reason }),
     });
-    if (res.ok) {
-      toast({ title: "Member removed" });
-      router.refresh();
-    }
+    if (res.ok) { toast({ title: "Member removed" }); router.refresh(); }
   }
 
   const statusColumns = ["TODO", "IN_PROGRESS", "DONE"];
@@ -176,7 +154,7 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
               </div>
             )}
             {messages.map((m: any) => {
-              const sender = m.sender || project.team.find((t: any) => t.userId === m.senderId)?.user || { name: "Unknown", avatar: null };
+              const sender = m.sender || { name: "Unknown", avatar: null };
               const isOwn = m.senderId === currentUser.id;
               return (
                 <div key={m.id} className={cn("flex gap-2", isOwn && "justify-end")}>
@@ -188,9 +166,7 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
                   )}
                   <div className={cn("max-w-[75%] space-y-0.5", isOwn && "items-end flex flex-col")}>
                     {!isOwn && <p className="text-xs text-muted-foreground px-1">{sender.name}</p>}
-                    <div className={cn("px-3.5 py-2 rounded-2xl text-sm", isOwn ? "bg-primary text-primary-foreground" : "bg-muted")}>
-                      {m.content}
-                    </div>
+                    <div className={cn("px-3.5 py-2 rounded-2xl text-sm", isOwn ? "bg-primary text-primary-foreground" : "bg-muted")}>{m.content}</div>
                     <p className="text-[10px] text-muted-foreground px-1">{timeAgo(m.createdAt)}</p>
                   </div>
                 </div>
@@ -198,19 +174,9 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
             })}
             <div ref={chatEnd} />
           </div>
-          <form
-            onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
-            className="flex gap-2"
-          >
-            <Input
-              placeholder="Type a message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              className="flex-1"
-            />
-            <Button type="submit" size="icon" disabled={!newMessage.trim()}>
-              <Send className="h-4 w-4" />
-            </Button>
+          <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex gap-2">
+            <Input placeholder="Type a message..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} className="flex-1" />
+            <Button type="submit" size="icon" disabled={!newMessage.trim()}><Send className="h-4 w-4" /></Button>
           </form>
         </TabsContent>
 
@@ -232,19 +198,14 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
             </Dialog>
           </div>
           {notes.length === 0 ? (
-            <div className="text-center py-12">
-              <FileText className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
-              <p className="text-muted-foreground text-sm">No notes yet.</p>
-            </div>
+            <div className="text-center py-12"><FileText className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" /><p className="text-muted-foreground text-sm">No notes yet.</p></div>
           ) : (
             <div className="grid md:grid-cols-2 gap-3">
               {notes.map((n: any) => (
                 <div key={n.id} className="p-4 rounded-xl border bg-card">
                   <h3 className="font-medium">{n.title}</h3>
                   <p className="text-sm text-muted-foreground mt-1.5 whitespace-pre-wrap line-clamp-4">{n.content}</p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    By {n.author?.name || "Unknown"} · {timeAgo(n.updatedAt)}
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">By {n.author?.name || "Unknown"} · {timeAgo(n.updatedAt)}</p>
                 </div>
               ))}
             </div>
@@ -263,15 +224,9 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
                 <div className="space-y-4">
                   <Input placeholder="Task title" value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} />
                   <Textarea placeholder="Description (optional)" rows={3} value={taskDesc} onChange={(e) => setTaskDesc(e.target.value)} />
-                  <select
-                    value={taskAssignee}
-                    onChange={(e) => setTaskAssignee(e.target.value)}
-                    className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-                  >
+                  <select value={taskAssignee} onChange={(e) => setTaskAssignee(e.target.value)} className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm">
                     <option value="">Unassigned</option>
-                    {project.team.map((m: any) => (
-                      <option key={m.id} value={m.userId}>{m.user.name}</option>
-                    ))}
+                    {project.team.map((m: any) => <option key={m.id} value={m.userId}>{m.user.name}</option>)}
                   </select>
                   <Input type="date" value={taskDue} onChange={(e) => setTaskDue(e.target.value)} />
                   <Button className="w-full" onClick={createTask} disabled={!taskTitle.trim()}>Create Task</Button>
@@ -279,35 +234,42 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
               </DialogContent>
             </Dialog>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {statusColumns.map((col) => (
               <div key={col} className="space-y-3">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {col.replace("_", " ")} ({tasks.filter((t: any) => t.status === col).length})
-                </h3>
-                <div className="space-y-2 min-h-[120px]">
-                  {tasks
-                    .filter((t: any) => t.status === col)
-                    .map((t: any) => (
-                      <div
-                        key={t.id}
-                        className="p-3.5 rounded-xl border bg-card cursor-pointer hover:shadow-sm hover:border-primary/20 transition-all"
-                        onClick={() => {
-                          const next = col === "TODO" ? "IN_PROGRESS" : col === "IN_PROGRESS" ? "DONE" : "TODO";
-                          updateTaskStatus(t.id, next);
-                        }}
-                      >
-                        <p className="text-sm font-medium">{t.title}</p>
-                        {t.description && (
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{t.description}</p>
-                        )}
-                        <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                          <span>{t.assignedTo ? project.team.find((m: any) => m.userId === t.assignedTo)?.user?.name || "Unknown" : "Unassigned"}</span>
-                          {t.dueDate && <span>{timeAgo(t.dueDate)}</span>}
-                        </div>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{col.replace("_", " ")} ({tasks.filter((t: any) => t.status === col).length})</h3>
+                <div className="space-y-2 min-h-[120px] rounded-xl transition-colors"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const taskId = e.dataTransfer.getData("text/plain");
+                    if (taskId && tasks.find(t => t.id === taskId)?.status !== col) {
+                      updateTaskStatus(taskId, col);
+                    }
+                    setDraggingTaskId(null);
+                  }}
+                >
+                  {tasks.filter((t: any) => t.status === col).map((t: any) => (
+                    <div key={t.id} 
+                      className={cn(
+                        "p-3.5 rounded-xl border bg-card cursor-grab active:cursor-grabbing hover:shadow-sm hover:border-primary/20 transition-all",
+                        draggingTaskId === t.id && "opacity-50 scale-95"
+                      )}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData("text/plain", t.id);
+                        setDraggingTaskId(t.id);
+                      }}
+                      onDragEnd={() => setDraggingTaskId(null)}
+                    >
+                      <p className="text-sm font-medium">{t.title}</p>
+                      {t.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{t.description}</p>}
+                      <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                        <span>{t.assignedTo ? project.team.find((m: any) => m.userId === t.assignedTo)?.user?.name || "Unknown" : "Unassigned"}</span>
+                        {t.dueDate && <span>{timeAgo(t.dueDate)}</span>}
                       </div>
-                    ))}
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}

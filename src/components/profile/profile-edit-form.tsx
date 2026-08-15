@@ -20,6 +20,7 @@ interface ProfileEditFormProps {
     bio: string | null;
     githubUrl: string | null;
     linkedinUrl: string | null;
+    resumeUrl: string | null;
     skills: { name: string }[];
     domains: { name: string }[];
   };
@@ -32,6 +33,7 @@ export function ProfileEditForm({ user, allSkills, allDomains }: ProfileEditForm
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user.avatar);
+  const [resumePreview, setResumePreview] = useState<string | null>(user.resumeUrl);
   const [selectedSkills, setSelectedSkills] = useState(user.skills.map((s) => s.name));
   const [selectedDomains, setSelectedDomains] = useState(user.domains.map((d) => d.name));
   const [formData, setFormData] = useState({
@@ -52,6 +54,15 @@ export function ProfileEditForm({ user, allSkills, allDomains }: ProfileEditForm
 
   function removeAvatar() {
     setAvatarPreview(null);
+  }
+
+  function handleResumeUpload(url: string, _name?: string) {
+    setResumePreview(url);
+    toast({ title: "Resume updated" });
+  }
+
+  function removeResume() {
+    setResumePreview(null);
   }
 
   function toggleSkill(skill: string) {
@@ -76,6 +87,7 @@ export function ProfileEditForm({ user, allSkills, allDomains }: ProfileEditForm
       body: JSON.stringify({
         ...formData,
         avatar: avatarPreview === user.avatar ? undefined : avatarPreview,
+        resumeUrl: resumePreview === user.resumeUrl ? undefined : resumePreview,
         skills: selectedSkills,
         domains: selectedDomains,
       }),
@@ -173,6 +185,33 @@ export function ProfileEditForm({ user, allSkills, allDomains }: ProfileEditForm
             placeholder="https://linkedin.com/in/username"
           />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Resume</Label>
+        <div className="flex items-center gap-4">
+          {resumePreview ? (
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" asChild>
+                <a href={resumePreview} target="_blank" rel="noopener noreferrer">View Current Resume</a>
+              </Button>
+              <Button type="button" variant="destructive" size="icon" onClick={removeResume}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="w-full max-w-sm">
+              <FileUpload
+                projectId="temp"
+                onUploadComplete={handleResumeUpload}
+                accept=".pdf,.doc,.docx,image/*"
+                maxSize={2 * 1024 * 1024}
+                buttonText="Upload Resume"
+              />
+            </div>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">PDF, DOC, or Image up to 2MB</p>
       </div>
 
       <div className="space-y-2">
