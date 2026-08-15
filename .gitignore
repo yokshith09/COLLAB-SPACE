@@ -48,3 +48,5 @@ dev-server*.log
 dev-codex*.log
 .playwright-cli/
 output.html
+output/
+builder-buddies-main/
