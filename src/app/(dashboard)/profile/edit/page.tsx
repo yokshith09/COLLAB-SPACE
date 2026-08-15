@@ -29,6 +29,7 @@ export default async function ProfileEditPage() {
     bio: user.bio ?? null,
     githubUrl: user.githubUrl ?? null,
     linkedinUrl: user.linkedinUrl ?? null,
+    resumeUrl: user.resumeUrl ?? null,
     skills: user.skills.map((s: string) => ({ name: s })),
     domains: user.domains.map((d: string) => ({ name: d })),
   };
