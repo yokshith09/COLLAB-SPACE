@@ -5,7 +5,7 @@ import { connectDB } from "@/lib/mongoose";
 import { AnimateIn } from "@/components/home/animate-in";
 import {
   Users, MessageSquare, CheckSquare, Search, ArrowRight,
-  Globe, Zap, Shield, Sparkles, ChevronRight, Star, BookOpen
+  Globe, Zap, Shield, Sparkles, ChevronRight, Star, BookOpen, Lock
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +45,11 @@ const features = [
     icon: BookOpen,
     title: "Blogs & Trends",
     description: "Share knowledge, read community posts, and see what technologies are trending right now.",
+  },
+  {
+    icon: Lock,
+    title: "Enterprise Security",
+    description: "Your data is encrypted at rest and in transit. Secure OAuth authentication built-in.",
   },
 ];
 
@@ -169,6 +174,21 @@ export default async function HomePage() {
                 </div>
               </div>
             </AnimateIn>
+          </div>
+        </section>
+
+        {/* Trusted By Section */}
+        <section className="border-b bg-muted/20 py-12 overflow-hidden">
+          <div className="mx-auto max-w-5xl px-4 text-center">
+            <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-8">
+              Trusted by builders from top institutions & organizations
+            </p>
+            <div className="flex flex-wrap justify-center gap-8 md:gap-16 text-muted-foreground transition-all">
+              <div className="flex items-center gap-2 font-bold text-xl hover:text-foreground transition-colors cursor-default"><Globe className="h-6 w-6"/> MIT Build</div>
+              <div className="flex items-center gap-2 font-bold text-xl hover:text-foreground transition-colors cursor-default"><Zap className="h-6 w-6"/> YC Startup School</div>
+              <div className="flex items-center gap-2 font-bold text-xl hover:text-foreground transition-colors cursor-default"><Shield className="h-6 w-6"/> Stanford AI</div>
+              <div className="flex items-center gap-2 font-bold text-xl hover:text-foreground transition-colors cursor-default"><Users className="h-6 w-6"/> Hackathon Org</div>
+            </div>
           </div>
         </section>
 

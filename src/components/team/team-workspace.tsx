@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { timeAgo, cn } from "@/lib/utils";
-import { MessageSquare, FileText, CheckSquare, Send, Plus } from "lucide-react";
+import { MessageSquare, FileText, CheckSquare, Send, Plus, Sparkles, Loader2 } from "lucide-react";
 
 export function TeamWorkspace({ project, currentUser }: { project: any; currentUser: any }) {
   const router = useRouter();
@@ -30,6 +30,7 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
   const [taskBounty, setTaskBounty] = useState("");
   const [activeTab, setActiveTab] = useState("chat");
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
+  const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
   const chatEnd = useRef<HTMLDivElement>(null);
 
   // Poll for new messages every 4 seconds
@@ -92,6 +93,33 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
       setTasks((prev) => [task, ...prev]);
       setTaskOpen(false); setTaskTitle(""); setTaskDesc(""); setTaskAssignee(""); setTaskDue(""); setTaskBounty("");
       toast({ title: "Task created" });
+    }
+  }
+
+  async function generateTasksAI() {
+    setIsGeneratingTasks(true);
+    try {
+      const res = await fetch("/api/teams/tasks/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          projectId: project.id, 
+          description: project.description 
+        }),
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setTasks((prev) => [...data.tasks, ...prev]);
+        toast({ title: "AI Generated Tasks", description: `Successfully generated ${data.tasks.length} tasks.` });
+      } else {
+        const data = await res.json();
+        toast({ title: "Failed to generate tasks", description: data.error, variant: "destructive" });
+      }
+    } catch (err) {
+      toast({ title: "Failed to generate tasks", description: "An unexpected error occurred.", variant: "destructive" });
+    } finally {
+      setIsGeneratingTasks(false);
     }
   }
 
@@ -216,10 +244,21 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
         <TabsContent value="tasks" className="flex-1 overflow-y-auto">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold">Tasks ({tasks.length})</h2>
-            <Dialog open={taskOpen} onOpenChange={setTaskOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> New Task</Button>
-              </DialogTrigger>
+            <div className="flex items-center gap-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="gap-1.5 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                onClick={generateTasksAI}
+                disabled={isGeneratingTasks}
+              >
+                {isGeneratingTasks ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {isGeneratingTasks ? "Generating..." : "Auto-Generate"}
+              </Button>
+              <Dialog open={taskOpen} onOpenChange={setTaskOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> New Task</Button>
+                </DialogTrigger>
               <DialogContent>
                 <DialogHeader><DialogTitle>New Task</DialogTitle></DialogHeader>
                 <div className="space-y-4">
