@@ -275,7 +275,8 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
               </DialogContent>
             </Dialog>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {statusColumns.map((col) => (
               <div key={col} className="space-y-3">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{col.replace("_", " ")} ({tasks.filter((t: any) => t.status === col).length})</h3>
