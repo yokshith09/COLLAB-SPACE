@@ -36,6 +36,60 @@ export default function AboutPage() {
         </div>
       </section>
 
+      <section className="space-y-6">
+        <h2 className="text-2xl font-bold border-b pb-2">Core Features</h2>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="p-6 border rounded-xl bg-card space-y-3 hover:border-primary/50 transition-colors">
+            <h3 className="font-semibold text-lg">👤 Dynamic Talent Profiles</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Curated portfolios aggregating skills, domain expertise, GitHub commits, LinkedIn presence, and resumes.
+            </p>
+          </div>
+          <div className="p-6 border rounded-xl bg-card space-y-3 hover:border-primary/50 transition-colors">
+            <h3 className="font-semibold text-lg">🤖 AI-Powered Matchmaking</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Algorithmic recommendations pairing the right talent with the right projects for optimal team synergy.
+            </p>
+          </div>
+          <div className="p-6 border rounded-xl bg-card space-y-3 hover:border-primary/50 transition-colors">
+            <h3 className="font-semibold text-lg">🛠 Project & Milestone Hub</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Establish multi-phase milestones, map out required technical competencies, and visually track progression.
+            </p>
+          </div>
+          <div className="p-6 border rounded-xl bg-card space-y-3 hover:border-primary/50 transition-colors">
+            <h3 className="font-semibold text-lg">👥 Dedicated Team Enclaves</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              High-focus workspaces featuring contextual chat channels, shared notes, and agile task boards.
+            </p>
+          </div>
+          <div className="p-6 border rounded-xl bg-card space-y-3 hover:border-primary/50 transition-colors">
+            <h3 className="font-semibold text-lg">🎯 AI Task Breakdown</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Sophisticated Kanban boards with dynamic routing and AI-assisted task breakdowns for complex features.
+            </p>
+          </div>
+          <div className="p-6 border rounded-xl bg-card space-y-3 hover:border-primary/50 transition-colors">
+            <h3 className="font-semibold text-lg">💬 Real-Time Communication</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Low-latency instant messaging architected for deep-dive technical deliberations and rapid alignment.
+            </p>
+          </div>
+          <div className="p-6 border rounded-xl bg-card space-y-3 hover:border-primary/50 transition-colors">
+            <h3 className="font-semibold text-lg">🏆 Gamification & Bounties</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Built-in telemetry tracking contributions, activity heatmaps, and a bounty system to reward completion.
+            </p>
+          </div>
+          <div className="p-6 border rounded-xl bg-card space-y-3 hover:border-primary/50 transition-colors">
+            <h3 className="font-semibold text-lg">🔄 GitHub Synchronization</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Seamlessly link your codebase with projects to keep technical progress and project tracking unified.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className="space-y-6 p-8 bg-primary/5 rounded-2xl border border-primary/10">
         <h2 className="text-2xl font-bold">The Application Process</h2>
         <p className="text-muted-foreground leading-relaxed">
