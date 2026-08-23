@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     }
 
     const payload = JSON.parse(payloadString);
-    let textsToScan: string[] = [];
+    const textsToScan: string[] = [];
     let sourceUrl = "";
     let actorName = "";
 
