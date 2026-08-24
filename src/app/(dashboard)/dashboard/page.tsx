@@ -66,7 +66,11 @@ export default async function DashboardPage() {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-bold">Dashboard</h1>
-            {quotaSummary.isPro ? (
+            {quotaSummary.isTrialActive ? (
+              <Badge className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold gap-1 text-xs py-0.5 shadow-sm">
+                <Sparkles className="w-3.5 h-3.5" /> 30-Day Free Trial ({quotaSummary.trialDaysRemaining}d left)
+              </Badge>
+            ) : quotaSummary.isPro ? (
               <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold gap-1 text-xs py-0.5 shadow-sm">
                 <Crown className="w-3.5 h-3.5" /> Pro Plan
               </Badge>
@@ -79,19 +83,11 @@ export default async function DashboardPage() {
           <p className="text-muted-foreground text-sm">Welcome back, {user.name}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {!quotaSummary.isPro ? (
-            <Link href="/pricing">
-              <Button size="sm" variant="default" className="gap-1.5 bg-gradient-to-r from-primary to-primary/80 font-bold shadow-sm">
-                <Crown className="w-3.5 h-3.5 text-amber-300" /> Upgrade to Pro
-              </Button>
-            </Link>
-          ) : (
-            <Link href="/pricing">
-              <Button size="sm" variant="outline" className="gap-1.5 text-xs">
-                Manage Plan
-              </Button>
-            </Link>
-          )}
+          <Link href="/pricing">
+            <Button size="sm" variant={quotaSummary.isTrialActive ? "outline" : "default"} className="gap-1.5 font-semibold text-xs shadow-sm">
+              <Crown className="w-3.5 h-3.5 text-amber-500" /> View Plans & Pricing
+            </Button>
+          </Link>
           <Link href="/projects/new"><Button size="sm" variant="outline">+ New Project</Button></Link>
           <Link href={`/profile/${uid}`}><Button variant="ghost" size="sm">Profile</Button></Link>
         </div>
@@ -102,10 +98,12 @@ export default async function DashboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-xs font-bold text-foreground">Monthly AI Quota & Account Limits</span>
+            <span className="text-xs font-bold text-foreground">
+              {quotaSummary.isTrialActive ? "30-Day All-Access Free Trial (All Pro Features Unlocked)" : "Monthly AI Quota & Account Limits"}
+            </span>
           </div>
           <span className="text-[11px] text-muted-foreground">
-            Quota resets on {new Date(quotaSummary.resetDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+            {quotaSummary.isTrialActive ? `${quotaSummary.trialDaysRemaining} days remaining in trial (paid plans activate after trial)` : `Quota resets on ${new Date(quotaSummary.resetDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`}
           </span>
         </div>
 

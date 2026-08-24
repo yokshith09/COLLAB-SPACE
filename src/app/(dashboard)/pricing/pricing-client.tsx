@@ -124,6 +124,30 @@ export function PricingClient({ quotaSummary, isAuthenticated }: Props) {
         </div>
       </div>
 
+      {/* 30-Day Free Trial Banner */}
+      <div className="max-w-4xl mx-auto p-5 rounded-2xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-start sm:items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-primary text-primary-foreground shadow-sm shrink-0">
+            <Sparkles className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-sm sm:text-base">30-Day All-Access Free Trial Active</h3>
+              <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold">Free Trial</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Enjoy all Pro features — including deep AI reasoning, Living PRDs, and sprint milestones — 100% free for your first 30 days. Paid subscription billing will activate after your 30-day trial period.
+            </p>
+          </div>
+        </div>
+        {quotaSummary?.isTrialActive && (
+          <div className="shrink-0 text-left sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-primary/10">
+            <span className="text-xs font-bold text-primary block">{quotaSummary.trialDaysRemaining} Days Left</span>
+            <span className="text-[10px] text-muted-foreground">in your free trial</span>
+          </div>
+        )}
+      </div>
+
       {/* Pricing Cards */}
       <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
         {/* Free Tier */}

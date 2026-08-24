@@ -77,9 +77,12 @@ export function UpgradeModal({
           <DialogTitle className="text-xl sm:text-2xl font-extrabold tracking-tight">
             Supercharge Your Builder Workflow
           </DialogTitle>
+          <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-300 mt-1">
+            🎁 <span className="font-bold">30-Day All-Access Free Trial:</span> All Pro AI features are currently unlocked for free during your trial. Paid plans will activate after your 30-day trial period.
+          </div>
           {triggerFeature && (
             <p className="text-xs text-muted-foreground pt-1">
-              You reached the Free limit for <span className="font-semibold text-foreground">{triggerFeature}</span>. Upgrade to unlock high-capacity AI.
+              Previewing plans for <span className="font-semibold text-foreground">{triggerFeature}</span>.
             </p>
           )}
         </DialogHeader>

@@ -16,6 +16,8 @@ export interface QuotaCheckResult {
   limit: number;
   remaining: number;
   resetDate: Date;
+  isTrialActive?: boolean;
+  trialDaysRemaining?: number;
   error?: string;
 }
 
@@ -23,6 +25,8 @@ export interface UserQuotaSummary {
   plan: PlanType;
   planName: string;
   isPro: boolean;
+  isTrialActive: boolean;
+  trialDaysRemaining: number;
   planExpiresAt?: Date;
   resetDate: Date;
   activeProjects: { current: number; limit: number; percentage: number };
@@ -41,11 +45,17 @@ export async function checkAndConsumeQuota(
     throw new Error("User not found");
   }
 
+  const now = new Date();
   const planType: PlanType = (user.plan as PlanType) || "FREE";
   const planConfig = PLANS[planType] || PLANS.FREE;
 
+  // 30-Day All-Access Free Trial calculation
+  const createdDate = user.createdAt ? new Date(user.createdAt) : now;
+  const trialEnd = new Date(createdDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const trialDaysRemaining = Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
+  const isTrialActive = trialDaysRemaining > 0;
+
   // Check 30-day reset cycle
-  const now = new Date();
   const lastReset = user.aiUsage?.lastResetAt ? new Date(user.aiUsage.lastResetAt) : new Date(0);
   const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
   const isResetDue = now.getTime() - lastReset.getTime() >= thirtyDaysMs;
@@ -64,20 +74,22 @@ export async function checkAndConsumeQuota(
   );
 
   let currentUsage = 0;
+  // If trial is active or user is Pro, grant generous trial quota
+  const effectiveLimits = (isTrialActive || planType === "PRO") ? PLANS.PRO.limits : planConfig.limits;
   let limit = 0;
 
   switch (action) {
     case "IDEA_VALIDATION":
       currentUsage = user.aiUsage?.ideaValidations || 0;
-      limit = planConfig.limits.monthlyIdeaValidations;
+      limit = effectiveLimits.monthlyIdeaValidations;
       break;
     case "PRD_GENERATION":
       currentUsage = user.aiUsage?.prdGenerations || 0;
-      limit = planConfig.limits.monthlyPrdGenerations;
+      limit = effectiveLimits.monthlyPrdGenerations;
       break;
     case "MILESTONE_GENERATION":
       currentUsage = user.aiUsage?.milestoneGenerations || 0;
-      limit = planConfig.limits.monthlyMilestoneGenerations;
+      limit = effectiveLimits.monthlyMilestoneGenerations;
       break;
     case "PROJECT_CREATION":
       const activeCount = await Project.countDocuments({
@@ -85,11 +97,16 @@ export async function checkAndConsumeQuota(
         status: { $in: ["OPEN", "ACTIVE", "FULL"] },
       });
       currentUsage = activeCount;
-      limit = planConfig.limits.maxActiveProjects;
+      limit = effectiveLimits.maxActiveProjects;
       break;
   }
 
-  if (currentUsage >= limit) {
+  // If beyond trial/pro quota and not in trial
+  if (!isTrialActive && planType === "FREE" && currentUsage >= planConfig.limits[
+    action === "IDEA_VALIDATION" ? "monthlyIdeaValidations" :
+    action === "PRD_GENERATION" ? "monthlyPrdGenerations" :
+    action === "MILESTONE_GENERATION" ? "monthlyMilestoneGenerations" : "maxActiveProjects"
+  ]) {
     return {
       allowed: false,
       action,
@@ -98,11 +115,13 @@ export async function checkAndConsumeQuota(
       limit,
       remaining: 0,
       resetDate: nextResetDate,
-      error: `You've reached your monthly limit of ${limit} for ${action.replace("_", " ").toLowerCase()} on the ${planConfig.name} plan. Upgrade to Pro for increased limits!`,
+      isTrialActive: false,
+      trialDaysRemaining: 0,
+      error: `Your 30-day free trial has expired and you've reached the Free limit for ${action.replace("_", " ").toLowerCase()}. Upgrade to Pro to continue unlimited access!`,
     };
   }
 
-  // Consume quota (except PROJECT_CREATION which is checked dynamically)
+  // Consume quota
   if (action === "IDEA_VALIDATION") {
     user.aiUsage.ideaValidations = (user.aiUsage.ideaValidations || 0) + 1;
   } else if (action === "PRD_GENERATION") {
@@ -119,8 +138,10 @@ export async function checkAndConsumeQuota(
     plan: planType,
     currentUsage: currentUsage + 1,
     limit,
-    remaining: limit - (currentUsage + 1),
+    remaining: Math.max(0, limit - (currentUsage + 1)),
     resetDate: nextResetDate,
+    isTrialActive,
+    trialDaysRemaining,
   };
 }
 
@@ -131,10 +152,18 @@ export async function getUserQuotaSummary(userId: string): Promise<UserQuotaSumm
     throw new Error("User not found");
   }
 
+  const now = new Date();
   const planType: PlanType = (user.plan as PlanType) || "FREE";
   const planConfig = PLANS[planType] || PLANS.FREE;
 
-  const now = new Date();
+  // 30-Day All-Access Free Trial calculation
+  const createdDate = user.createdAt ? new Date(user.createdAt) : now;
+  const trialEnd = new Date(createdDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const trialDaysRemaining = Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
+  const isTrialActive = trialDaysRemaining > 0;
+
+  const effectiveLimits = (isTrialActive || planType === "PRO") ? PLANS.PRO.limits : planConfig.limits;
+
   const lastReset = user.aiUsage?.lastResetAt ? new Date(user.aiUsage.lastResetAt) : new Date(0);
   const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
   const resetDate = new Date(lastReset.getTime() + thirtyDaysMs);
@@ -150,29 +179,31 @@ export async function getUserQuotaSummary(userId: string): Promise<UserQuotaSumm
 
   return {
     plan: planType,
-    planName: planConfig.name,
-    isPro: planType === "PRO",
+    planName: isTrialActive ? "30-Day All-Access Free Trial" : planConfig.name,
+    isPro: planType === "PRO" || isTrialActive,
+    isTrialActive,
+    trialDaysRemaining,
     planExpiresAt: user.planExpiresAt,
     resetDate,
     activeProjects: {
       current: activeProjectsCount,
-      limit: planConfig.limits.maxActiveProjects,
-      percentage: Math.min(100, Math.round((activeProjectsCount / planConfig.limits.maxActiveProjects) * 100)),
+      limit: effectiveLimits.maxActiveProjects,
+      percentage: Math.min(100, Math.round((activeProjectsCount / effectiveLimits.maxActiveProjects) * 100)),
     },
     ideaValidations: {
       current: ideaVal,
-      limit: planConfig.limits.monthlyIdeaValidations,
-      percentage: Math.min(100, Math.round((ideaVal / planConfig.limits.monthlyIdeaValidations) * 100)),
+      limit: effectiveLimits.monthlyIdeaValidations,
+      percentage: Math.min(100, Math.round((ideaVal / effectiveLimits.monthlyIdeaValidations) * 100)),
     },
     prdGenerations: {
       current: prdGen,
-      limit: planConfig.limits.monthlyPrdGenerations,
-      percentage: Math.min(100, Math.round((prdGen / planConfig.limits.monthlyPrdGenerations) * 100)),
+      limit: effectiveLimits.monthlyPrdGenerations,
+      percentage: Math.min(100, Math.round((prdGen / effectiveLimits.monthlyPrdGenerations) * 100)),
     },
     milestoneGenerations: {
       current: mileGen,
-      limit: planConfig.limits.monthlyMilestoneGenerations,
-      percentage: Math.min(100, Math.round((mileGen / planConfig.limits.monthlyMilestoneGenerations) * 100)),
+      limit: effectiveLimits.monthlyMilestoneGenerations,
+      percentage: Math.min(100, Math.round((mileGen / effectiveLimits.monthlyMilestoneGenerations) * 100)),
     },
   };
 }
