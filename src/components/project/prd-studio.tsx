@@ -160,7 +160,7 @@ export function PRDStudio({ projectId, initialPrd, initialMilestones = [], isOwn
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Last updated {new Date(prd.updatedAt || Date.now()).toLocaleDateString()} · {prd.features?.length || 0} Features Planned
+              {prd.updatedAt ? `Last updated ${new Date(prd.updatedAt).toLocaleDateString()}` : "Recently updated"} · {prd.features?.length || 0} Features Planned
             </p>
           </div>
         </div>
