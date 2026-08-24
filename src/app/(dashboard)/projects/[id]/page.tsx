@@ -60,29 +60,44 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     const app = await Application.findOne({ userId: dbUser._id, projectId }).lean();
     if (app) {
       const a = app as any;
-      userApplication = { id: a._id.toString(), status: a.status, expiresAt: a.expiresAt, messages: a.messages || [] };
+      userApplication = {
+        id: a._id.toString(),
+        type: a.type || "APPLICATION",
+        invitedBy: a.invitedBy ? a.invitedBy.toString() : undefined,
+        status: a.status,
+        message: a.message,
+        roleRequested: a.roleRequested,
+        expiresAt: a.expiresAt,
+        messages: a.messages || [],
+      };
     }
   }
 
   let allApplications: any[] = [];
+  let existingCandidateAppMap: Record<string, { status: string; type: string }> = {};
   if (isOwner) {
     const apps = await Application.find({ projectId }).populate("userId", "name avatar bio skills githubUrl linkedinUrl").populate("messages.senderId", "name avatar").sort({ createdAt: -1 }).lean();
-    allApplications = (apps as any[]).map((a) => ({
-      id: a._id.toString(),
-      status: a.status,
-      message: a.message,
-      roleRequested: a.roleRequested,
-      availability: a.availability,
-      resumeUrl: a.resumeUrl,
-      messages: (a.messages || []).map((m: any) => ({
-        content: m.content,
-        createdAt: m.createdAt,
-        senderId: m.senderId._id ? m.senderId._id.toString() : m.senderId.toString(),
-        senderName: m.senderId.name,
-      })),
-      createdAt: a.createdAt,
-      user: { id: a.userId._id.toString(), name: a.userId.name, avatar: a.userId.avatar, bio: a.userId.bio, skills: a.userId.skills ?? [], githubUrl: a.userId.githubUrl, linkedinUrl: a.userId.linkedinUrl },
-    }));
+    allApplications = (apps as any[]).map((a) => {
+      existingCandidateAppMap[a.userId._id.toString()] = { status: a.status, type: a.type || "APPLICATION" };
+      return {
+        id: a._id.toString(),
+        type: a.type || "APPLICATION",
+        invitedBy: a.invitedBy ? a.invitedBy.toString() : undefined,
+        status: a.status,
+        message: a.message,
+        roleRequested: a.roleRequested,
+        availability: a.availability,
+        resumeUrl: a.resumeUrl,
+        messages: (a.messages || []).map((m: any) => ({
+          content: m.content,
+          createdAt: m.createdAt,
+          senderId: m.senderId._id ? m.senderId._id.toString() : m.senderId.toString(),
+          senderName: m.senderId.name,
+        })),
+        createdAt: a.createdAt,
+        user: { id: a.userId._id.toString(), name: a.userId.name, avatar: a.userId.avatar, bio: a.userId.bio, skills: a.userId.skills ?? [], githubUrl: a.userId.githubUrl, linkedinUrl: a.userId.linkedinUrl },
+      };
+    });
   }
 
   const currentUser = dbUser ? { id: dbUser._id.toString(), name: dbUser.name, email: dbUser.email, avatar: dbUser.avatar } : null;
@@ -95,13 +110,23 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     potentialCoFounders = await getPotentialCoFounders(projectId);
   }
 
+  const { getProjectPRD } = await import("@/actions/prd");
+  const { getProjectMilestones } = await import("@/actions/milestone");
+  const [initialPrd, initialMilestones] = await Promise.all([
+    getProjectPRD(projectId),
+    getProjectMilestones(projectId),
+  ]);
+
   return (
     <ProjectDetail
       project={project}
+      initialPrd={initialPrd}
+      initialMilestones={initialMilestones}
       isOwner={isOwner}
       isMember={isMember}
       userApplication={userApplication}
       allApplications={allApplications}
+      existingCandidateAppMap={existingCandidateAppMap}
       currentUser={currentUser}
       recommendedUsers={recommendedUsers.map((u: any) => ({
         id: u._id.toString(),
@@ -109,7 +134,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         avatar: u.avatar,
         bio: u.bio,
         skills: u.skills || [],
-        matchScore: u.matchScore
+        matchScore: u.matchScore,
+        appStatus: existingCandidateAppMap[u._id.toString()]?.status,
+        appType: existingCandidateAppMap[u._id.toString()]?.type,
       }))}
       potentialCoFounders={potentialCoFounders.map((p: any) => ({
         id: p._id.toString(),

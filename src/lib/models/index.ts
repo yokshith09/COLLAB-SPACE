@@ -1,4 +1,4 @@
-export { User, type IUser } from "./User";
+export { User, type IUser, type UserPlan, type IUserAIUsage } from "./User";
 export { Project, type IProject } from "./Project";
 export { Application } from "./Application";
 export { TeamMember } from "./TeamMember";
@@ -7,3 +7,5 @@ export { Note } from "./Note";
 export { Task } from "./Task";
 export { Notification } from "./Notification";
 export { Blog } from "./Blog";
+export { PRD, type IPRD, type IPRDFeature, type IPRDTechStack, type IPRDApiEndpoint } from "./PRD";
+export { Milestone, type IMilestone, type IMilestoneDeliverable, type MilestoneStatus } from "./Milestone";

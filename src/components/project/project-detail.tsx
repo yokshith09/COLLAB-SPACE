@@ -14,14 +14,17 @@ import { Input } from "@/components/ui/input";
 import { FileUpload } from "@/components/shared/file-upload";
 import { getHealthStatus, daysLeft, timeAgo } from "@/lib/utils";
 import { applyToProject } from "@/actions/project";
-import { respondToApplication, sendApplicationMessage } from "@/actions/application";
+import { respondToApplication, sendApplicationMessage, sendCollaborationInvite, respondToCollaborationInvite } from "@/actions/application";
 import { updateProjectShowcase } from "@/actions/project";
 import Link from "next/link";
-import { Users, Calendar, Clock, MessageSquare, ExternalLink, Share2, Code, LayoutTemplate, Pencil, Sparkles } from "lucide-react";
+import { Users, Calendar, Clock, MessageSquare, ExternalLink, Share2, Code, LayoutTemplate, Pencil, Sparkles, UserPlus, Check, X, FileText, Layers } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { PRDStudio } from "./prd-studio";
 
 interface ProjectDetailProps {
   project: any;
+  initialPrd?: any | null;
+  initialMilestones?: any[];
   isOwner: boolean;
   isMember: boolean;
   userApplication: any;
@@ -29,9 +32,10 @@ interface ProjectDetailProps {
   currentUser: any;
   recommendedUsers?: any[];
   potentialCoFounders?: any[];
+  existingCandidateAppMap?: Record<string, { status: string; type: string }>;
 }
 
-export function ProjectDetail({ project, isOwner, isMember, userApplication, allApplications, currentUser, recommendedUsers = [], potentialCoFounders = [] }: ProjectDetailProps) {
+export function ProjectDetail({ project, initialPrd, initialMilestones = [], isOwner, isMember, userApplication, allApplications, currentUser, recommendedUsers = [], potentialCoFounders = [] }: ProjectDetailProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [applyOpen, setApplyOpen] = useState(false);
@@ -42,6 +46,14 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
   const [applying, setApplying] = useState(false);
   const [msgContent, setMsgContent] = useState<Record<string, string>>({});
   const [sendingMsg, setSendingMsg] = useState<Record<string, boolean>>({});
+
+  const [inviteUser, setInviteUser] = useState<any | null>(null);
+  const [inviteMessage, setInviteMessage] = useState("");
+  const [inviteRole, setInviteRole] = useState("");
+  const [sendingInvite, setSendingInvite] = useState(false);
+  const [sentInviteUserIds, setSentInviteUserIds] = useState<Set<string>>(new Set());
+  const [respondingInvite, setRespondingInvite] = useState(false);
+  const [mainTab, setMainTab] = useState<"overview" | "prd">("overview");
 
   const [showcaseOpen, setShowcaseOpen] = useState(false);
   const [githubUrl, setGithubUrl] = useState(project.githubUrl || "");
@@ -112,6 +124,38 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
       toast({ title: "Error", description: result.error, variant: "destructive" });
     } else {
       toast({ title: status === "ACCEPTED" ? "Applicant accepted!" : "Application rejected" });
+      router.refresh();
+    }
+  }
+
+  async function handleSendInvite() {
+    if (!inviteUser) return;
+    setSendingInvite(true);
+    const res = await sendCollaborationInvite(project.id, inviteUser.id, inviteMessage, inviteRole);
+    setSendingInvite(false);
+    if (res.error) {
+      toast({ title: "Failed to send invitation", description: res.error, variant: "destructive" });
+    } else {
+      toast({ title: "Invitation sent!", description: `An invitation was sent to ${inviteUser.name}.` });
+      setSentInviteUserIds((prev) => new Set(prev).add(inviteUser.id));
+      setInviteUser(null);
+      setInviteMessage("");
+      setInviteRole("");
+      router.refresh();
+    }
+  }
+
+  async function handleRespondInvite(inviteId: string, accept: boolean) {
+    setRespondingInvite(true);
+    const res = await respondToCollaborationInvite(inviteId, accept);
+    setRespondingInvite(false);
+    if (res.error) {
+      toast({ title: "Error", description: res.error, variant: "destructive" });
+    } else {
+      toast({
+        title: accept ? "Welcome to the team! 🎉" : "Invitation declined",
+        description: accept ? "You are now a collaborator on this project." : undefined,
+      });
       router.refresh();
     }
   }
@@ -262,39 +306,88 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
       </div>
 
       {userApplication && !isMember && (
-        <div className="p-4 rounded-xl border bg-muted/30 space-y-4">
-          <div>
-            <p className="text-sm font-medium">
-              Your application: <span className="text-primary">{userApplication.status}</span>
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Expires {daysLeft(userApplication.expiresAt)}
-            </p>
-          </div>
-
-          <div className="space-y-3 pt-3 border-t">
-            <h4 className="text-sm font-semibold">Messages</h4>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {userApplication.messages?.map((m: any, i: number) => (
-                <div key={i} className={`p-2 rounded-lg text-sm ${m.senderId === currentUser?.id ? 'bg-primary/10 ml-8' : 'bg-muted mr-8'}`}>
-                  <p>{m.content}</p>
+        userApplication.type === "INVITATION" ? (
+          <div className="p-5 rounded-xl border border-primary/40 bg-primary/5 shadow-sm space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🎉</span>
+                  <h3 className="font-bold text-base text-primary">You've Been Invited to Join This Team!</h3>
+                  <Badge variant="outline" className="text-xs border-primary/40 text-primary">
+                    {userApplication.status}
+                  </Badge>
                 </div>
-              ))}
-              {!userApplication.messages?.length && <p className="text-xs text-muted-foreground">No messages yet.</p>}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Message admin..."
-                value={msgContent[userApplication.id] || ""}
-                onChange={(e) => setMsgContent({ ...msgContent, [userApplication.id]: e.target.value })}
-                className="h-8 text-sm"
-              />
-              <Button size="sm" onClick={() => handleSendMsg(userApplication.id)} disabled={sendingMsg[userApplication.id]}>
-                Send
-              </Button>
+                <p className="text-sm text-foreground/90 italic bg-card/60 p-2.5 rounded-lg border border-border/50">
+                  &ldquo;{userApplication.message}&rdquo;
+                </p>
+                {userApplication.roleRequested && (
+                  <p className="text-xs text-muted-foreground">
+                    Role offered: <span className="font-medium text-foreground">{userApplication.roleRequested}</span>
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Expires {daysLeft(userApplication.expiresAt)}
+                </p>
+              </div>
+
+              {userApplication.status === "PENDING" && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    size="sm"
+                    onClick={() => handleRespondInvite(userApplication.id, true)}
+                    disabled={respondingInvite}
+                    className="gap-1.5"
+                  >
+                    <Check className="h-4 w-4" /> Accept Invite
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleRespondInvite(userApplication.id, false)}
+                    disabled={respondingInvite}
+                    className="gap-1.5"
+                  >
+                    <X className="h-4 w-4" /> Decline
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="p-4 rounded-xl border bg-muted/30 space-y-4">
+            <div>
+              <p className="text-sm font-medium">
+                Your application: <span className="text-primary">{userApplication.status}</span>
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Expires {daysLeft(userApplication.expiresAt)}
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-3 border-t">
+              <h4 className="text-sm font-semibold">Messages</h4>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {userApplication.messages?.map((m: any, i: number) => (
+                  <div key={i} className={`p-2 rounded-lg text-sm ${m.senderId === currentUser?.id ? 'bg-primary/10 ml-8' : 'bg-muted mr-8'}`}>
+                    <p>{m.content}</p>
+                  </div>
+                ))}
+                {!userApplication.messages?.length && <p className="text-xs text-muted-foreground">No messages yet.</p>}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Message admin..."
+                  value={msgContent[userApplication.id] || ""}
+                  onChange={(e) => setMsgContent({ ...msgContent, [userApplication.id]: e.target.value })}
+                  className="h-8 text-sm"
+                />
+                <Button size="sm" onClick={() => handleSendMsg(userApplication.id)} disabled={sendingMsg[userApplication.id]}>
+                  Send
+                </Button>
+              </div>
+            </div>
+          </div>
+        )
       )}
 
       {project.status === "COMPLETED" && (project.githubUrl || project.demoUrl || project.gallery?.length > 0) && (
@@ -330,10 +423,21 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
-        <div className="space-y-6">
-          <section className="space-y-2">
-            <h2 className="font-semibold">Description</h2>
+      <Tabs value={mainTab} onValueChange={(v: any) => setMainTab(v)} className="w-full">
+        <TabsList className="grid grid-cols-2 max-w-sm mb-6">
+          <TabsTrigger value="overview" className="gap-1.5 text-xs sm:text-sm">
+            <Users className="h-3.5 w-3.5" /> Overview & Team
+          </TabsTrigger>
+          <TabsTrigger value="prd" className="gap-1.5 text-xs sm:text-sm">
+            <Sparkles className="h-3.5 w-3.5 text-primary" /> AI PRD & Architecture
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+            <div className="space-y-6">
+              <section className="space-y-2">
+                <h2 className="font-semibold">Description</h2>
             <div className="text-muted-foreground leading-relaxed [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_a]:text-primary [&_a]:underline [&_h1]:text-xl [&_h1]:font-bold [&_h2]:text-lg [&_h2]:font-bold [&_p]:mb-2 [&_h3]:font-semibold space-y-1">
               <ReactMarkdown>{project.description}</ReactMarkdown>
             </div>
@@ -447,36 +551,127 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
                 <Sparkles className="h-5 w-5 text-primary" />
                 <h2 className="font-semibold text-lg">AI Recommended Candidates</h2>
               </div>
-              <p className="text-sm text-muted-foreground mb-4">Users who match this project's required skills.</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Active builders matching your project's technical stack. Send a direct collaboration invite!
+              </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {recommendedUsers.map((user: any) => (
-                  <div key={user.id} className="p-4 rounded-xl border bg-primary/5 hover:bg-primary/10 transition-colors flex items-start gap-3 relative overflow-hidden">
-                    {user.matchScore && (
-                      <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-1 rounded-bl-lg flex items-center gap-1 shadow-sm">
-                        <Sparkles className="w-3 h-3" /> {user.matchScore} Match
-                      </div>
-                    )}
-                    <Avatar className="h-10 w-10 border shadow-sm">
-                      <AvatarImage src={user.avatar || ""} />
-                      <AvatarFallback className="bg-background text-primary">{user.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0 pr-8">
-                      <Link href={`/profile/${user.id}`} className="font-semibold text-sm hover:underline hover:text-primary transition-colors">
-                        {user.name}
-                      </Link>
-                      {user.bio && <p className="text-xs text-muted-foreground truncate mt-0.5">{user.bio}</p>}
-                      {user.skills && user.skills.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {user.skills.slice(0, 3).map((s: string) => (
-                            <Badge key={s} variant="secondary" className="text-[9px] h-4 px-1.5">{s}</Badge>
-                          ))}
-                          {user.skills.length > 3 && <span className="text-[10px] text-muted-foreground pl-1">+{user.skills.length - 3}</span>}
+                {recommendedUsers.map((user: any) => {
+                  const isTeamMember = project.team.some((t: any) => t.userId === user.id);
+                  const isInvited = sentInviteUserIds.has(user.id) || (user.appType === "INVITATION" && user.appStatus === "PENDING");
+                  const hasApplied = user.appType === "APPLICATION" && user.appStatus === "PENDING";
+
+                  return (
+                    <div key={user.id} className="p-4 rounded-xl border bg-primary/5 hover:bg-primary/10 transition-colors flex flex-col justify-between gap-3 relative overflow-hidden">
+                      {user.matchScore && (
+                        <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-1 rounded-bl-lg flex items-center gap-1 shadow-sm">
+                          <Sparkles className="w-3 h-3" /> {user.matchScore} Match
                         </div>
                       )}
+                      
+                      <div className="flex items-start gap-3">
+                        <Avatar className="h-10 w-10 border shadow-sm shrink-0">
+                          <AvatarImage src={user.avatar || ""} />
+                          <AvatarFallback className="bg-background text-primary">{user.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0 pr-8">
+                          <Link href={`/profile/${user.id}`} className="font-semibold text-sm hover:underline hover:text-primary transition-colors">
+                            {user.name}
+                          </Link>
+                          {user.bio && <p className="text-xs text-muted-foreground truncate mt-0.5">{user.bio}</p>}
+                          {user.skills && user.skills.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {user.skills.slice(0, 3).map((s: string) => (
+                                <Badge key={s} variant="secondary" className="text-[9px] h-4 px-1.5">{s}</Badge>
+                              ))}
+                              {user.skills.length > 3 && <span className="text-[10px] text-muted-foreground pl-1">+{user.skills.length - 3}</span>}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-border/40 flex items-center justify-between">
+                        {isTeamMember ? (
+                          <Badge variant="secondary" className="text-[10px] font-normal">Already on team</Badge>
+                        ) : isInvited ? (
+                          <Badge variant="outline" className="text-[10px] text-primary border-primary font-medium">
+                            Invitation Sent ✓
+                          </Badge>
+                        ) : hasApplied ? (
+                          <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-500 font-medium">
+                            Applied (Pending)
+                          </Badge>
+                        ) : (
+                          <Button
+                            size="sm"
+                            className="text-xs h-7 px-3 gap-1 ml-auto"
+                            onClick={() => {
+                              setInviteUser(user);
+                              setInviteRole("Collaborator");
+                              setInviteMessage(`Hey ${user.name}! We're building "${project.title}" and saw your skills in ${user.skills?.slice(0, 2).join(", ") || "software engineering"}. Would love to have you on our team!`);
+                            }}
+                          >
+                            <UserPlus className="h-3 w-3" /> Invite to Team
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Direct Collaboration Invite Dialog Modal */}
+              <Dialog open={!!inviteUser} onOpenChange={(open) => !open && setInviteUser(null)}>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <UserPlus className="h-5 w-5 text-primary" />
+                      Invite {inviteUser?.name} to Team
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-3">
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/40 border">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={inviteUser?.avatar || ""} />
+                        <AvatarFallback>{inviteUser?.name?.[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm">{inviteUser?.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{inviteUser?.bio || "Active builder"}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="role">Role / Responsibilities</Label>
+                      <Input
+                        id="role"
+                        placeholder="e.g. Frontend Engineer, Full-Stack Dev"
+                        value={inviteRole}
+                        onChange={(e) => setInviteRole(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="message">Personalized Invitation Message</Label>
+                      <Textarea
+                        id="message"
+                        rows={4}
+                        placeholder="Write a message explaining why they would be a great fit..."
+                        value={inviteMessage}
+                        onChange={(e) => setInviteMessage(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2">
+                      <Button variant="outline" onClick={() => setInviteUser(null)} disabled={sendingInvite}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleSendInvite} disabled={sendingInvite} className="gap-1.5">
+                        {sendingInvite ? "Sending..." : "Send Invitation"}
+                      </Button>
                     </div>
                   </div>
-                ))}
-              </div>
+                </DialogContent>
+              </Dialog>
             </section>
           )}
 
@@ -569,6 +764,18 @@ export function ProjectDetail({ project, isOwner, isMember, userApplication, all
           )}
         </div>
       </div>
-    </div>
-  );
+    </TabsContent>
+
+    <TabsContent value="prd" className="space-y-6">
+      <PRDStudio
+        projectId={project.id}
+        initialPrd={initialPrd}
+        initialMilestones={initialMilestones}
+        isOwner={isOwner}
+        isMember={isMember}
+      />
+    </TabsContent>
+  </Tabs>
+</div>
+);
 }

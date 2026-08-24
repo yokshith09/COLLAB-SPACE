@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Compass, LogOut, Trophy } from "lucide-react";
+import { Compass, LogOut, Trophy, Sparkles } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -33,6 +33,11 @@ export async function Navbar() {
           <Link href="/about">
             <Button variant="ghost" size="sm" className="gap-1.5">
               About
+            </Button>
+          </Link>
+          <Link href="/pricing">
+            <Button variant="ghost" size="sm" className="gap-1.5">
+              <Sparkles className="h-4 w-4 text-primary" /> Pricing
             </Button>
           </Link>
           {session?.user && (

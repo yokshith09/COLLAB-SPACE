@@ -1,11 +1,14 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 export type AppStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "EXPIRED";
+export type AppType = "APPLICATION" | "INVITATION";
 
 export interface IApplication extends Document {
   _id: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
   projectId: mongoose.Types.ObjectId;
+  type: AppType;
+  invitedBy?: mongoose.Types.ObjectId;
   message: string;
   roleRequested?: string;
   availability?: string;
@@ -20,6 +23,8 @@ const ApplicationSchema = new Schema<IApplication>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     projectId: { type: Schema.Types.ObjectId, ref: "Project", required: true },
+    type: { type: String, enum: ["APPLICATION", "INVITATION"], default: "APPLICATION" },
+    invitedBy: { type: Schema.Types.ObjectId, ref: "User" },
     message: { type: String, required: true },
     roleRequested: { type: String },
     availability: { type: String },

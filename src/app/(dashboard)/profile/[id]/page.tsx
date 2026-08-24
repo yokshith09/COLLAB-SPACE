@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/mongoose";
 import { User, Project, TeamMember } from "@/lib/models";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Globe, Link as LinkIcon, Edit, Award } from "lucide-react";
+import { Globe, Link as LinkIcon, Edit, Award, Crown, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { ActivityHeatmap } from "@/components/profile/activity-heatmap";
 import { ProfileSkills } from "@/components/profile/profile-skills";
@@ -73,8 +73,19 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
           <div className="space-y-4 flex-1">
             <div className="flex items-start justify-between">
               <div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <h1 className="text-3xl font-bold tracking-tight">{u.name}</h1>
+                  {u.plan === "PRO" ? (
+                    <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold gap-1 text-xs py-1 px-2.5 shadow-sm">
+                      <Crown className="w-3.5 h-3.5" /> Pro Builder
+                    </Badge>
+                  ) : isOwnProfile ? (
+                    <Link href="/pricing">
+                      <Badge variant="outline" className="gap-1 text-xs text-primary border-primary/30 hover:bg-primary/5 cursor-pointer py-1 px-2.5 transition-colors">
+                        <Sparkles className="w-3 h-3" /> Free Tier · Upgrade
+                      </Badge>
+                    </Link>
+                  ) : null}
                   {u.points > 0 && (
                     <div className="flex items-center gap-1.5 bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 px-3 py-1 rounded-full text-sm font-semibold border border-yellow-500/20 shadow-sm">
                       <Award className="w-4 h-4" />

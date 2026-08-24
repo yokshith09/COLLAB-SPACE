@@ -10,9 +10,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { timeAgo, cn } from "@/lib/utils";
-import { MessageSquare, FileText, CheckSquare, Send, Plus, Sparkles, Loader2 } from "lucide-react";
+import { MessageSquare, FileText, CheckSquare, Send, Plus, Sparkles, Loader2, Layers } from "lucide-react";
+import { PRDStudio } from "@/components/project/prd-studio";
 
-export function TeamWorkspace({ project, currentUser }: { project: any; currentUser: any }) {
+export function TeamWorkspace({
+  project,
+  currentUser,
+  initialPrd,
+  initialMilestones = [],
+}: {
+  project: any;
+  currentUser: any;
+  initialPrd?: any | null;
+  initialMilestones?: any[];
+}) {
   const router = useRouter();
   const { toast } = useToast();
   const [messages, setMessages] = useState<any[]>(project.messages || []);
@@ -168,10 +179,11 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 flex flex-wrap">
           <TabsTrigger value="chat" className="gap-1.5"><MessageSquare className="h-4 w-4" /> Chat</TabsTrigger>
           <TabsTrigger value="notes" className="gap-1.5"><FileText className="h-4 w-4" /> Notes</TabsTrigger>
           <TabsTrigger value="tasks" className="gap-1.5"><CheckSquare className="h-4 w-4" /> Tasks</TabsTrigger>
+          <TabsTrigger value="prd" className="gap-1.5"><Sparkles className="h-4 w-4 text-primary" /> PRD & Architecture</TabsTrigger>
         </TabsList>
 
         <TabsContent value="chat" className="flex-1 flex flex-col">
@@ -335,6 +347,16 @@ export function TeamWorkspace({ project, currentUser }: { project: any; currentU
               </div>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="prd" className="flex-1 overflow-y-auto pb-4">
+          <PRDStudio
+            projectId={project.id}
+            initialPrd={initialPrd}
+            initialMilestones={initialMilestones}
+            isOwner={project.owner?.id === currentUser?.id}
+            isMember={true}
+          />
         </TabsContent>
       </Tabs>
     </div>

@@ -4,8 +4,11 @@ import { connectDB } from "@/lib/mongoose";
 import { User, Project, TeamMember, Application } from "@/lib/models";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Sparkles } from "lucide-react";
+import { Sparkles, MailOpen, Flag, Clock, CheckCircle2, ArrowRight, Crown, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { InvitationCard } from "@/components/notifications/invitation-card";
+import { getUserActiveMilestones } from "@/actions/milestone";
+import { getUserQuotaSummary } from "@/lib/ai/rate-limiter";
 
 function toId(doc: any) {
   return { ...doc.toObject(), id: doc._id.toString() };
@@ -36,10 +39,20 @@ export default async function DashboardPage() {
     }).sort({ createdAt: -1 }).limit(6).lean() as any;
   }
 
-  const [ownedProjects, memberships, applications] = await Promise.all([
+  const [ownedProjects, memberships, receivedInvitations, submittedApplications, activeMilestones, quotaSummary] = await Promise.all([
     Project.find({ ownerId: uid }).sort({ createdAt: -1 }).lean(),
     TeamMember.find({ userId: uid }).populate("projectId", "title ownerId").lean(),
-    Application.find({ userId: uid }).populate("projectId", "title").sort({ createdAt: -1 }).lean(),
+    Application.find({ userId: uid, type: "INVITATION" })
+      .populate("projectId", "title ownerId")
+      .populate("invitedBy", "name avatar")
+      .sort({ createdAt: -1 })
+      .lean(),
+    Application.find({ userId: uid, type: { $ne: "INVITATION" } })
+      .populate("projectId", "title")
+      .sort({ createdAt: -1 })
+      .lean(),
+    getUserActiveMilestones(uid.toString()),
+    getUserQuotaSummary(uid.toString()),
   ]);
 
   const teamCounts: Record<string, number> = {};
@@ -49,14 +62,97 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, {user.name}</p>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl font-bold">Dashboard</h1>
+            {quotaSummary.isPro ? (
+              <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold gap-1 text-xs py-0.5 shadow-sm">
+                <Crown className="w-3.5 h-3.5" /> Pro Plan
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-xs text-muted-foreground font-medium">
+                Community Tier
+              </Badge>
+            )}
+          </div>
+          <p className="text-muted-foreground text-sm">Welcome back, {user.name}</p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/projects/new"><Button size="sm">+ New Project</Button></Link>
-          <Link href={`/profile/${uid}`}><Button variant="outline" size="sm">View Profile</Button></Link>
+        <div className="flex flex-wrap gap-2">
+          {!quotaSummary.isPro ? (
+            <Link href="/pricing">
+              <Button size="sm" variant="default" className="gap-1.5 bg-gradient-to-r from-primary to-primary/80 font-bold shadow-sm">
+                <Crown className="w-3.5 h-3.5 text-amber-300" /> Upgrade to Pro
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/pricing">
+              <Button size="sm" variant="outline" className="gap-1.5 text-xs">
+                Manage Plan
+              </Button>
+            </Link>
+          )}
+          <Link href="/projects/new"><Button size="sm" variant="outline">+ New Project</Button></Link>
+          <Link href={`/profile/${uid}`}><Button variant="ghost" size="sm">Profile</Button></Link>
+        </div>
+      </div>
+
+      {/* Monthly Quota & Limits Meter */}
+      <div className="p-4 sm:p-5 rounded-2xl border bg-card/60 backdrop-blur-sm space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-xs font-bold text-foreground">Monthly AI Quota & Account Limits</span>
+          </div>
+          <span className="text-[11px] text-muted-foreground">
+            Quota resets on {new Date(quotaSummary.resetDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
+          {/* Active Projects */}
+          <div className="p-3 rounded-xl border bg-background/50 space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+              <span>Active Projects</span>
+              <span className="font-bold text-foreground">{quotaSummary.activeProjects.current}/{quotaSummary.activeProjects.limit}</span>
+            </div>
+            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${quotaSummary.activeProjects.percentage}%` }} />
+            </div>
+          </div>
+
+          {/* AI Validations */}
+          <div className="p-3 rounded-xl border bg-background/50 space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+              <span>AI Validations</span>
+              <span className="font-bold text-foreground">{quotaSummary.ideaValidations.current}/{quotaSummary.ideaValidations.limit}</span>
+            </div>
+            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${quotaSummary.ideaValidations.percentage}%` }} />
+            </div>
+          </div>
+
+          {/* PRD Generations */}
+          <div className="p-3 rounded-xl border bg-background/50 space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+              <span>Living PRDs</span>
+              <span className="font-bold text-foreground">{quotaSummary.prdGenerations.current}/{quotaSummary.prdGenerations.limit}</span>
+            </div>
+            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${quotaSummary.prdGenerations.percentage}%` }} />
+            </div>
+          </div>
+
+          {/* Sprint Milestones */}
+          <div className="p-3 rounded-xl border bg-background/50 space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+              <span>Sprint Milestones</span>
+              <span className="font-bold text-foreground">{quotaSummary.milestoneGenerations.current}/{quotaSummary.milestoneGenerations.limit}</span>
+            </div>
+            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${quotaSummary.milestoneGenerations.percentage}%` }} />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -92,6 +188,51 @@ export default async function DashboardPage() {
           </div>
         )}
       </section>
+
+      {activeMilestones.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Flag className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold">Active Project Sprints & Milestones ({activeMilestones.length})</h2>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            {(activeMilestones as any[]).map((m) => (
+              <Link key={m._id.toString()} href={`/projects/${m.projectId._id}`}>
+                <div className="p-4 rounded-xl border bg-card hover:border-primary/40 hover:shadow-sm transition-all space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold text-primary truncate max-w-[200px]">
+                      {m.projectId.title}
+                    </span>
+                    <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                      Sprint {m.order} · {m.progress}%
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-sm line-clamp-1">{m.title}</h4>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{m.description}</p>
+                  </div>
+
+                  <div className="space-y-1.5 pt-1">
+                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all"
+                        style={{ width: `${m.progress}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                      <span>{m.deliverables?.filter((d: any) => d.completed).length || 0}/{m.deliverables?.length || 0} Deliverables Done</span>
+                      <span className="text-primary font-medium flex items-center gap-0.5">
+                        Track Roadmap <ArrowRight className="w-3 h-3" />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section>
         <h2 className="text-lg font-semibold mb-4">Your Projects ({ownedProjects.length})</h2>
@@ -135,13 +276,40 @@ export default async function DashboardPage() {
         )}
       </section>
 
+      {receivedInvitations.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <MailOpen className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold">Team Invitations ({receivedInvitations.length})</h2>
+          </div>
+          <div className="space-y-3">
+            {(receivedInvitations as any[]).map((inv) => (
+              <InvitationCard
+                key={inv._id.toString()}
+                invite={{
+                  id: inv._id.toString(),
+                  projectId: inv.projectId._id.toString(),
+                  projectTitle: inv.projectId.title,
+                  message: inv.message,
+                  roleRequested: inv.roleRequested,
+                  status: inv.status,
+                  invitedByName: inv.invitedBy?.name || "Project Owner",
+                  invitedByAvatar: inv.invitedBy?.avatar,
+                  createdAt: inv.createdAt,
+                }}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
       <section>
-        <h2 className="text-lg font-semibold mb-4">Applications ({applications.length})</h2>
-        {applications.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No applications yet.</p>
+        <h2 className="text-lg font-semibold mb-4">Submitted Applications ({submittedApplications.length})</h2>
+        {submittedApplications.length === 0 ? (
+          <p className="text-muted-foreground text-sm">No applications submitted yet.</p>
         ) : (
           <div className="space-y-2">
-            {(applications as any[]).map((a) => (
+            {(submittedApplications as any[]).map((a) => (
               <Link key={a._id.toString()} href={`/projects/${a.projectId._id}`}>
                 <div className="p-4 rounded-xl border bg-card hover:shadow-md transition-all flex items-center justify-between">
                   <span className="font-medium">{a.projectId.title}</span>

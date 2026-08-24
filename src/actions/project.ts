@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/mongoose";
 import { User, Project, Application, TeamMember, Notification } from "@/lib/models";
+import { PLANS, type PlanType } from "@/lib/plans";
 import { revalidatePath } from "next/cache";
 
 export async function createProject(data: {
@@ -27,7 +28,18 @@ export async function createProject(data: {
     ownerId: user._id,
     status: { $in: ["OPEN", "FULL", "ACTIVE"] },
   });
-  if (activeCount >= 3) return { error: "Max 3 active projects reached" };
+
+  const planType = (user.plan as PlanType) || "FREE";
+  const planLimits = PLANS[planType]?.limits || PLANS.FREE.limits;
+
+  if (activeCount >= planLimits.maxActiveProjects) {
+    return {
+      error: `You have reached your limit of ${planLimits.maxActiveProjects} active projects on the ${planType} plan. Upgrade to Pro for up to 25 projects!`,
+      quotaExceeded: true,
+    };
+  }
+
+  const allowedTeamSize = Math.min(data.teamSizeMax, planLimits.maxTeamSize);
 
   const inviteCode = data.isPrivate ? crypto.randomUUID() : undefined;
 

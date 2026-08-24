@@ -69,5 +69,12 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
 
   const currentUser = { id: user._id.toString(), name: user.name, avatar: user.avatar };
 
-  return <TeamWorkspace project={project} currentUser={currentUser} />;
+  const { getProjectPRD } = await import("@/actions/prd");
+  const { getProjectMilestones } = await import("@/actions/milestone");
+  const [initialPrd, initialMilestones] = await Promise.all([
+    getProjectPRD(projectId),
+    getProjectMilestones(projectId),
+  ]);
+
+  return <TeamWorkspace project={project} currentUser={currentUser} initialPrd={initialPrd} initialMilestones={initialMilestones} />;
 }
