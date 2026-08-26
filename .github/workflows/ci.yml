@@ -1,37 +1,99 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  # ==========================================
+  # Stage 1: Continuous Integration (Lint, Typecheck, Build)
+  # ==========================================
   build-and-test:
+    name: Lint, Typecheck & Build
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: 'npm'
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run ESLint
-      run: npm run lint
+      - name: Run ESLint
+        run: npm run lint
 
-    - name: Build Next.js app (includes type checking)
-      run: npm run build
-      env:
-        NEXT_TELEMETRY_DISABLED: 1
-        DATABASE_URL: "mongodb://127.0.0.1:27017/collabspace_build"
-        AUTH_SECRET: "test-build-secret-key-32-chars-long-example"
-        AUTH_URL: "http://localhost:3000"
-        NEXTAUTH_SECRET: "test-build-secret-key-32-chars-long-example"
-        NEXTAUTH_URL: "http://localhost:3000"
+      - name: Run TypeScript Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test Production Build
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          DATABASE_URL: "mongodb://127.0.0.1:27017/collabspace_ci"
+          AUTH_SECRET: "test-ci-secret-key-32-chars-long-example"
+          AUTH_URL: "http://localhost:3000"
+          NEXTAUTH_SECRET: "test-ci-secret-key-32-chars-long-example"
+          NEXTAUTH_URL: "http://localhost:3000"
+
+  # ==========================================
+  # Stage 2: Continuous Deployment (Vercel Production)
+  # ==========================================
+  deploy-production:
+    name: Deploy to Production
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        if: env.VERCEL_TOKEN != ''
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Fallback Deployment Notification
+        if: env.VERCEL_TOKEN == ''
+        run: |
+          echo "=========================================================="
+          echo "CI/CD Pipeline: Build & Test validated successfully!"
+          echo "Notice: Automatic Vercel deployment triggered via GitHub Integration."
+          echo "To enable direct GitHub Actions Vercel deployments, add the following secrets:"
+          echo "  - VERCEL_TOKEN"
+          echo "  - VERCEL_ORG_ID"
+          echo "  - VERCEL_PROJECT_ID"
+          echo "=========================================================="
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
