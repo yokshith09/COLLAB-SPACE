@@ -1,15 +1,17 @@
 <div align="center">
   
 # 🌌 COLLAB-SPACE
-### *A Next-Generation Workspace for High-Performance Teams*
+### *The AI-Augmented Product Workspace & Team Matchmaking Platform*
 
-[![Next.js 14](https://img.shields.io/badge/Next.js%2014-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Next.js 16](https://img.shields.io/badge/Next.js%2016-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript%205-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Framer Motion](https://img.shields.io/badge/Framer_Motion-black?style=for-the-badge&logo=framer&logoColor=blue)](https://www.framer.com/motion/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini_1.5_Flash-8E75B2?style=for-the-badge&logo=google-gemini&logoColor=white)](https://aistudio.google.com/)
+[![CI Status](https://img.shields.io/badge/CI-Passing-success?style=for-the-badge&logo=githubactions)](https://github.com/yokshith09/COLLAB-SPACE/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-[Live Demo](https://github.com/yokshith09/COLLAB-SPACE) • [Report Bug](https://github.com/yokshith09/COLLAB-SPACE/issues) • [Request Feature](https://github.com/yokshith09/COLLAB-SPACE/issues)
+[Explore Projects](https://github.com/yokshith09/COLLAB-SPACE) • [Living PRD Studio](https://github.com/yokshith09/COLLAB-SPACE) • [Report Bug](https://github.com/yokshith09/COLLAB-SPACE/issues) • [Request Feature](https://github.com/yokshith09/COLLAB-SPACE/issues)
 
 </div>
 
@@ -17,128 +19,212 @@
 
 ## ✦ Overview
 
-**COLLAB-SPACE** is an enterprise-grade, deeply integrated workspace designed to bridge the gap between ideation and seamless execution. Built for modern product teams, open-source communities, and agile startups, the platform offers a centralized ecosystem that eradicates the friction of context-switching between fragmented tools.
+**CollabSpace** is an all-in-one collaborative ecosystem designed for student developers, indie hackers, and open-source creators to stress-test ideas, generate Living Product Requirement Documents (PRDs), recruit compatible teammates, and manage sprint milestones toward production launch.
 
-By converging robust task management, real-time communication, and intelligent resource tracking, **COLLAB-SPACE** serves as the definitive command center for executing complex projects from inception to deployment.
+By combining deep **AI idea validation**, **automated technical specification generation**, **interactive Mermaid architecture mind maps**, and **real-time team workspaces**, CollabSpace bridges the gap between raw idea brainstorming and shipping deployed software.
 
 ---
 
-## ✦ Core Capabilities
+## ✦ Core Feature Ecosystem
 
-<table align="center">
+<table>
   <tr>
     <td width="50%">
-      <h3>👤 Dynamic Talent Profiles</h3>
-      <p>Curated portfolios that aggregate skills, domain expertise, GitHub commits, LinkedIn presence, and resumes, algorithmically positioning individuals for optimal team synergy.</p>
+      <h3>🧠 AI Idea Viability Validator</h3>
+      <p>Evaluate project submissions across a 5-dimension scorecard (Problem Clarity, MVP Feasibility, Technical Moat, Contributor Attractiveness, Market Traction) with actionable blind-spot detection and a 1-click Pitch Enhancer.</p>
     </td>
     <td width="50%">
-      <h3>🛠 Project & Milestone Hub</h3>
-      <p>Comprehensive project command centers. Establish multi-phase milestones, map out required technical competencies, and visually track global project progression in real-time.</p>
+      <h3>📄 Living PRD Studio</h3>
+      <p>Synthesize complete technical PRDs from simple pitches. Includes feature hierarchies, system architectures, database schemas, REST API contracts, and direct Markdown (<code>.md</code>) export.</p>
     </td>
   </tr>
   <tr>
     <td width="50%">
-      <h3>👥 Dedicated Team Enclaves</h3>
-      <p>Isolated, high-focus workspaces for granular teams, seamlessly integrating contextual chat channels, shared cryptographic notes, and agile task boards.</p>
+      <h3>🗺️ Interactive Mermaid Mind Maps</h3>
+      <p>Auto-generate dynamic architecture diagrams, user flowcharts, and Entity-Relationship (ER) schemas rendered client-side with smooth zoom, pan, and SVG export controls.</p>
     </td>
     <td width="50%">
-      <h3>🎯 Agile Task Matrix</h3>
-      <p>Sophisticated Kanban-style task orchestration featuring dynamic assignee routing, automated deadline tracking, and multi-tier priority stratification.</p>
+      <h3>📋 Spec-to-Kanban Decomposition</h3>
+      <p>Transform PRD specifications into actionable Kanban cards with 1 click, automatically tagging technical competencies and injecting tasks directly into the Team Workspace.</p>
     </td>
   </tr>
   <tr>
     <td width="50%">
-      <h3>💬 Synchronous Communication</h3>
-      <p>Low-latency instant messaging and persistent discussion boards architected specifically for deep-dive technical deliberations and rapid alignment.</p>
+      <h3>🎯 Sprint Milestone & Reminder Engine</h3>
+      <p>Break project roadmaps into 4 agile sprint milestones with interactive deliverable checklists, real-time progress calculations, and automated 48-hour team reminders to prevent project staleness.</p>
     </td>
     <td width="50%">
-      <h3>🏆 Gamified Engagement</h3>
-      <p>Built-in telemetry tracking contribution velocity, activity heatmaps, and milestone leaderboards to foster a culture of continuous delivery and recognition.</p>
+      <h3>🤝 AI Matchmaking & Direct Invites</h3>
+      <p>Discover compatible talent through AI skill-radar matching or dispatch direct collaboration invitations to active platform builders with personalized role pitches.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h3>💬 Private Team Enclaves</h3>
+      <p>High-focus collaborative workspaces featuring real-time group chat channels, shared scratchpad notes, drag-and-drop agile task boards, and GitHub commit webhook synchronization.</p>
+    </td>
+    <td width="50%">
+      <h3>🏆 Builder Profiles & Gamification</h3>
+      <p>Curated talent portfolios showcasing GitHub commits, LinkedIn presence, skill endorsements, activity heatmaps, reputation points, and leaderboard standings.</p>
     </td>
   </tr>
 </table>
 
 ---
 
-## ✦ Technical Architecture
+## ✦ Dual-Engine AI Architecture
 
-COLLAB-SPACE is engineered on a resilient, bleeding-edge modern web stack ensuring uncompromising performance, horizontal scalability, and top-tier developer ergonomics.
-
-### The Stack
-
-* **Framework:** Next.js 14 utilizing the revolutionary App Router for unparalleled server-side rendering and static generation.
-* **Language:** TypeScript operating under strict configuration to guarantee end-to-end type safety and catch logical flaws at compile time.
-* **Database Layer:** MongoDB interfaced through Mongoose, providing a flexible schema structure adapted for rapidly mutating application states.
-* **Authentication:** NextAuth.js (v5) providing hardened credential validation, advanced session management, and seamless OAuth provider integrations.
-
-### Design System & UI
-
-* **Styling Engine:** Tailwind CSS for highly deterministic, utility-first styling.
-* **Component Library:** Radix UI primitives ensuring uncompromising accessibility (a11y) standards and unstyled architectural freedom.
-* **Animation & Micro-interactions:** Framer Motion for liquid-smooth transitions, physics-based UI elements, and a distinctly premium user feel.
-
----
-
-## ✦ Codebase Architecture
+CollabSpace implements a resilient **Dual-Engine AI Architecture**:
 
 ```mermaid
 graph TD
-    A[Client UI] -->|React Server Components| B(Next.js App Router)
-    A -->|Framer Motion/Tailwind| C[Design System]
-    B -->|Server Actions| D[Mutation Layer]
-    B -->|API Routes| E[Stateless Endpoints]
-    D --> F[(MongoDB)]
-    E --> F
-    B --> G[NextAuth.js Auth Layer]
-    G --> F
+    User([User Submission]) --> Router{GEMINI_API_KEY Configured?}
+    Router -->|Yes| Gemini[Google Gemini 1.5 Flash LLM API]
+    Router -->|No / Rate Limit| Fallback[Heuristic Domain Synthesizer]
+    Gemini --> Output[Validated Scorecard / Living PRD / Mermaid Diagram / Sprint Sprints]
+    Fallback --> Output
+    Output --> Database[(MongoDB & Mongoose)]
+    Output --> UI[Living PRD Studio & Milestone Tracker]
 ```
 
-<details>
-<summary><b>Directory Structure (Expand)</b></summary>
-<br>
+- **Live LLM Engine (Google Gemini 1.5 Flash):** High-speed, structured JSON schema outputs performing deep contextual reasoning and technical specification generation.
+- **Zero-Crash Contextual Fallback:** When offline or without API keys, an intelligent domain synthesizer computes metrics, blind spots, PRDs, Mermaid diagrams, and sprint milestones directly from project input parameters.
+
+---
+
+## ✦ Tiered Business Model & 30-Day Free Trial
+
+CollabSpace includes a full-featured subscription model with an **automatic 30-day all-access free trial**:
+
+| Feature / Quota | **Community Starter (Free Forever)** | **Pro Builder Studio ($19/mo or $15/mo annual)** |
+| :--- | :--- | :--- |
+| **Active Projects** | **Up to 2 projects** | **Up to 25 projects** |
+| **Max Team Size** | Up to 4 members | Up to 12 members |
+| **AI Idea Validations** | **5 / month** | **100 / month** |
+| **Living PRD Generations** | **2 / month** | **50 / month** |
+| **Sprint Milestone Roadmaps** | **2 / month** | **50 / month** |
+| **AI Intelligence Engine** | Standard Contextual Synthesizer | **Deep Google Gemini 1.5 Flash LLM** |
+| **Specification Export** | Web View | **Direct Markdown (.md) Download** |
+| **Milestone Reminders** | Manual in-app triggers | **Automated 48h Team Cron Reminders** |
+| **Profile Recognition** | Standard Profile | **"Pro Builder" Gold Badge & +100 Rep Points** |
+
+> **🎁 30-Day All-Access Free Trial:** Every new account receives full Pro-tier privileges free for the first 30 days. Paid subscription billing activates only after the trial concludes.
+
+---
+
+## ✦ Technical Architecture & Tech Stack
 
 ```text
 COLLAB-SPACE/
 ├── src/
-│   ├── actions/        # Cryptographically secure Server Actions for state mutations
-│   ├── app/            # Next.js App Router hierarchy (Pages, Layouts, APIs)
-│   ├── components/     # Composable UI primitives and domain-specific macros
-│   ├── lib/            # Core utilities, DB connection singletons, and schemas
-│   └── types/          # Immutable TypeScript global type definitions
-├── public/             # Optimized static media assets
-└── config/             # Environment-agnostic configuration maps
+│   ├── actions/                  # Next.js Server Actions (Auth, AI, PRD, Milestones, Subscriptions)
+│   ├── app/                      # App Router (Pages, Dashboard, Projects, Teams, Pricing, APIs)
+│   │   ├── (dashboard)/          # Authenticated routes (Dashboard, Pricing, Projects, Profile)
+│   │   └── api/                  # REST APIs & Background Cron Workers (/api/cron/*)
+│   ├── components/               # Modular UI Primitives & Domain Features
+│   │   ├── milestones/           # Interactive Milestone Steppers & Deliverable Checklists
+│   │   ├── project/              # Living PRD Studio, Mermaid Viewer, Idea Validator Modal
+│   │   ├── subscription/         # Pricing Hub, Upgrade Modal, Quota Meter Badges
+│   │   ├── team/                 # Private Team Enclave & Kanban Workspace
+│   │   └── ui/                   # Accessible Radix UI Primitives & Toast Notifications
+│   └── lib/                      # Core Services, Models, MongoDB, AI Rate Limiter & Plans
+├── .github/workflows/ci.yml      # Automated GitHub Actions CI/CD Pipeline
+└── public/                       # Static Assets & Branding
 ```
-</details>
+
+### Core Technologies
+- **Framework:** [Next.js 16 (App Router)](https://nextjs.org/)
+- **Language:** [TypeScript 5 (Strict Mode)](https://www.typescriptlang.org/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/) + [Radix UI](https://www.radix-ui.com/)
+- **Database & Models:** [MongoDB](https://www.mongodb.com/) + [Mongoose](https://mongoosejs.com/)
+- **Authentication:** [NextAuth.js v5](https://authjs.dev/)
+- **AI Intelligence:** [Google Gemini API](https://aistudio.google.com/)
+- **Diagrams & Visuals:** [Mermaid.js (CDN Dynamic Injection)](https://mermaid.js.org/)
+- **CI/CD:** [GitHub Actions](https://github.com/features/actions) + ESLint 9 Flat Config
 
 ---
 
-## ✦ Development Roadmap
+## ✦ Quick Start & Local Setup
 
-Our engineering team is actively building the next generation of features. Here is what is on the horizon:
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yokshith09/COLLAB-SPACE.git
+cd COLLAB-SPACE
+```
 
-- [ ] **Real-Time Telemetry:** Integration of WebSockets for instantaneous UI mutations without polling.
-- [ ] **AI Contextual Insights:** Intelligent task delegation and timeline forecasting powered by LLMs.
-- [ ] **Extensibility Hooks:** Slack, Discord, and native GitHub Action webhooks.
-- [ ] **Native Video/Audio:** WebRTC-powered synchronous stand-ups directly within the team enclave.
+### 2. Install Dependencies
+```bash
+npm install
+```
+
+### 3. Configure Environment Variables
+Create a `.env.local` file in the root directory based on `.env.example`:
+
+```env
+# Database (MongoDB)
+DATABASE_URL="mongodb+srv://<username>:<password>@cluster0.mongodb.net/collabspace?retryWrites=true&w=majority"
+
+# Auth.js Secret (generate with: npx auth secret)
+AUTH_SECRET="your-generated-auth-secret"
+AUTH_URL="http://localhost:3000"
+
+# Optional: Google Gemini AI (for live LLM reasoning)
+# Get a free key at: https://aistudio.google.com/
+GEMINI_API_KEY="AIzaSy..."
+
+# Optional: Supabase (for realtime storage/chat) & Resend (for emails)
+NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT].supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGci..."
+RESEND_API_KEY="re_..."
+```
+
+### 4. Run Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### 5. Validate & Build
+```bash
+# Typecheck
+npx tsc --noEmit
+
+# Lint (ESLint 9 Flat Config)
+npm run lint
+
+# Production Build
+npm run build
+```
 
 ---
 
-## ✦ Contribution Guidelines
+## ✦ Background Automated Cron Tasks
 
-We champion open-source contribution and peer-reviewed excellence. To contribute:
+CollabSpace includes stateless, serverless cron endpoints:
 
-1. **Fork** the repository to your local environment.
-2. **Branch** off for your feature (`git checkout -b feature/quantum-optimization`).
-3. **Commit** using conventional commit standards.
-4. **Push** and open a comprehensive Pull Request detailing architectural decisions.
+- **`/api/cron/milestone-reminders`**: Periodically scans active project sprints and sends targeted in-app notifications to team members every 48 hours.
+- **`/api/cron/expire-apps`**: Automatically expires unreviewed project applications after 14 days to prevent stale backlogs.
+- **`/api/cron/archive-inactive`**: Archives projects with no team activity past their deadline.
 
 ---
 
-## ✦ Licensing
+## ✦ Contributing
 
-This software is distributed under the prestigious **MIT License**. See the `LICENSE` file for extensive legal parameters.
+Contributions are welcome! To contribute:
+
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature/amazing-feature`).
+3. Commit your changes (`git commit -m "feat: add amazing feature"`).
+4. Push to your branch (`git push origin feature/amazing-feature`).
+5. Open a Pull Request.
+
+---
+
+## ✦ License
+
+Distributed under the **MIT License**. See `LICENSE` for more information.
 
 <div align="center">
   <br>
-  <i>Architected with precision by the COLLAB-SPACE Engineering Team.</i>
+  <i>Built with ❤️ for student builders, open-source teams, and creators worldwide.</i>
 </div>

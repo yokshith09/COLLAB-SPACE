@@ -50,3 +50,4 @@ dev-codex*.log
 output.html
 output/
 builder-buddies-main/
+.agents/plugins/

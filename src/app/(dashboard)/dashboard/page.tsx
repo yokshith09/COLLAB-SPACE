@@ -14,6 +14,8 @@ function toId(doc: any) {
   return { ...doc.toObject(), id: doc._id.toString() };
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.email) redirect("/sign-in");
