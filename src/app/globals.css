@@ -9,42 +9,42 @@
   --color-card-foreground: hsl(222 47% 11%);
   --color-popover: hsl(0 0% 100%);
   --color-popover-foreground: hsl(222 47% 11%);
-  --color-primary: hsl(173 80% 28%);
+  --color-primary: hsl(245 82% 60%);
   --color-primary-foreground: hsl(0 0% 100%);
   --color-secondary: hsl(214 32% 91%);
   --color-secondary-foreground: hsl(222 47% 11%);
   --color-muted: hsl(210 32% 93%);
   --color-muted-foreground: hsl(215 18% 34%);
-  --color-accent: hsl(173 55% 90%);
-  --color-accent-foreground: hsl(176 70% 16%);
+  --color-accent: hsl(245 65% 96%);
+  --color-accent-foreground: hsl(245 60% 30%);
   --color-destructive: hsl(0 72% 48%);
   --color-destructive-foreground: hsl(0 0% 100%);
   --color-border: hsl(214 25% 80%);
   --color-input: hsl(214 25% 72%);
-  --color-ring: hsl(173 80% 28%);
+  --color-ring: hsl(245 82% 60%);
   --radius: 0.5rem;
 }
 
 .dark {
-  --color-background: hsl(210 40% 98%);
-  --color-foreground: hsl(222 47% 11%);
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(222 47% 11%);
-  --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(222 47% 11%);
-  --color-primary: hsl(173 80% 28%);
+  --color-background: hsl(224 50% 8%);
+  --color-foreground: hsl(210 20% 95%);
+  --color-card: hsl(224 45% 12%);
+  --color-card-foreground: hsl(210 20% 95%);
+  --color-popover: hsl(224 45% 12%);
+  --color-popover-foreground: hsl(210 20% 95%);
+  --color-primary: hsl(245 82% 67%);
   --color-primary-foreground: hsl(0 0% 100%);
-  --color-secondary: hsl(214 32% 91%);
-  --color-secondary-foreground: hsl(222 47% 11%);
-  --color-muted: hsl(210 32% 93%);
-  --color-muted-foreground: hsl(215 18% 34%);
-  --color-accent: hsl(173 55% 90%);
-  --color-accent-foreground: hsl(176 70% 16%);
-  --color-destructive: hsl(0 72% 48%);
+  --color-secondary: hsl(224 30% 20%);
+  --color-secondary-foreground: hsl(210 20% 90%);
+  --color-muted: hsl(224 30% 16%);
+  --color-muted-foreground: hsl(215 15% 55%);
+  --color-accent: hsl(245 40% 18%);
+  --color-accent-foreground: hsl(245 80% 80%);
+  --color-destructive: hsl(0 63% 55%);
   --color-destructive-foreground: hsl(0 0% 100%);
-  --color-border: hsl(214 25% 80%);
-  --color-input: hsl(214 25% 72%);
-  --color-ring: hsl(173 80% 28%);
+  --color-border: hsl(224 20% 22%);
+  --color-input: hsl(224 20% 25%);
+  --color-ring: hsl(245 82% 67%);
 }
 
 * {
@@ -69,22 +69,84 @@ body {
 }
 
 .text-gradient {
-  color: var(--color-primary);
-  background: none;
-  -webkit-text-fill-color: currentColor;
+  background: linear-gradient(135deg, hsl(245 82% 60%), hsl(280 80% 60%), hsl(320 80% 55%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .dark .text-gradient {
-  color: var(--color-primary);
+  background: linear-gradient(135deg, hsl(245 82% 70%), hsl(280 80% 70%), hsl(320 80% 65%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .glow-bg {
   position: absolute;
-  filter: blur(90px);
+  filter: blur(120px);
   z-index: -1;
-  opacity: 0.08;
+  opacity: 0.15;
 }
 
 .dark .glow-bg {
-  opacity: 0.08;
+  opacity: 0.12;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark .glass-card {
+  background: rgba(30, 35, 55, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, hsl(245 82% 60%), hsl(280 80% 60%), hsl(320 80% 55%));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.25; transform: scale(1.05); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
 }
