@@ -468,6 +468,7 @@ export default async function HomePage() {
             <div>
               <h4 className="font-semibold text-sm mb-3">Resources</h4>
               <div className="space-y-2 text-sm text-muted-foreground">
+                <Link href="/how-it-works" className="block hover:text-foreground transition-colors">How it Works</Link>
                 <Link href="/about" className="block hover:text-foreground transition-colors">About</Link>
                 <Link href="/pricing" className="block hover:text-foreground transition-colors">Pricing</Link>
                 <Link href="/blogs" className="block hover:text-foreground transition-colors">Blog</Link>

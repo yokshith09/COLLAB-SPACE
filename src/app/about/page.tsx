@@ -40,6 +40,11 @@ export default function AboutPage() {
               <Sparkles className="w-4 h-4" /> Start a Project with AI
             </Button>
           </Link>
+          <Link href="/how-it-works">
+            <Button variant="outline" size="lg" className="rounded-full gap-2">
+              <Sparkles className="w-4 h-4 text-primary" /> How It Works
+            </Button>
+          </Link>
           <Link href="/projects">
             <Button variant="outline" size="lg" className="rounded-full gap-2">
               <Compass className="w-4 h-4" /> Explore Open Projects

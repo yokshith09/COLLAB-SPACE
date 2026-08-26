@@ -33,6 +33,11 @@ export async function Navbar() {
               <Trophy className="h-4 w-4 text-amber-500" /> Leaderboard
             </Button>
           </Link>
+          <Link href="/how-it-works">
+            <Button variant="ghost" size="sm" className="gap-1.5 font-medium">
+              How it Works
+            </Button>
+          </Link>
           <Link href="/about">
             <Button variant="ghost" size="sm" className="gap-1.5 font-medium">
               About
